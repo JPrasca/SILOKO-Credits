@@ -1,6 +1,0 @@
-- Hay MD's en la aplicación que he estado usando para probar procedimientos, no necesariamente deberían estar.
-- Hay validaciones que estan en proceso.
-- El PB multiregistro que quería entregar era el de asignación de monto de cupo de crédito a varios estratos
-  al tiempo (para una ciudad). Hay ciertas novedades que se presentan al registrar y no he logrado dar con el detalle
-  que solucione eso.
-- La base de datos apenas esta en proceso de llenado, los scripts no estan listos aún. Perdón por la escacez de registros	
