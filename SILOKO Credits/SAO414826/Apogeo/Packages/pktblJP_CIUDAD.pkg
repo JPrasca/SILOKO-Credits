@@ -1,0 +1,639 @@
+CREATE OR REPLACE PACKAGE pktblJp_Ciudad
+is 
+    ---------------
+    -- VARIABLES
+    ---------------
+    -- Cursor para accesar Jp_Ciudad
+    cursor cuJp_Ciudad
+    (
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type
+    )
+    is
+        SELECT *
+        FROM Jp_Ciudad
+        WHERE  Ciudcodi = inuCiudcodi;
+
+
+	-- Define colecciones de cada columna de la tabla 
+	type tyCiudcodi is table of Jp_Ciudad.Ciudcodi%type index by binary_integer;
+	type tyCiudnomb is table of Jp_Ciudad.Ciudnomb%type index by binary_integer;
+	type tyCiudpais is table of Jp_Ciudad.Ciudpais%type index by binary_integer;
+
+    /* Tipo Tabla de records*/
+    type tytbRowJp_Ciudad is table of Jp_Ciudad%rowtype index by binary_integer;
+
+    type tytbJp_Ciudad is record
+	(
+        Ciudcodi tyCiudcodi,
+        Ciudnomb tyCiudnomb,
+        Ciudpais tyCiudpais
+	);
+
+
+    ---------------
+    -- METHODS
+    ---------------
+
+    FUNCTION fsbVersion
+    RETURN varchar2;
+
+	function fsbGetMessageDescription
+	(
+		inuMenscodi	IN number
+	)
+	return varchar2;
+
+	PROCEDURE insRecord
+	(
+		ircRecord in Jp_Ciudad%rowtype
+	);
+
+	PROCEDURE InsRecords
+	(
+		irctbRecord in out nocopy tytbJp_Ciudad
+	);
+
+	PROCEDURE InsForEachColumn
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		isbCiudnomb in Jp_Ciudad.Ciudnomb%type,
+		inuCiudpais in Jp_Ciudad.Ciudpais%type
+	);
+
+	PROCEDURE InsForEachColumnBulk
+	(
+		inuCiudcodi in out nocopy tyCiudcodi,
+		isbCiudnomb in out nocopy tyCiudnomb,
+		inuCiudpais in out nocopy tyCiudpais
+	);
+
+	PROCEDURE ClearMemory;
+
+	PROCEDURE DelRecord
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type
+	);
+
+	PROCEDURE UpRecord
+	(
+		ircRecord in Jp_Ciudad%rowtype
+	);
+
+	PROCEDURE DelRecords
+	(
+		inuCiudcodi in out nocopy tyCiudcodi
+	);
+
+	FUNCTION fblExist
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN boolean;
+
+	FUNCTION frcGetRecord
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Ciudad%rowtype;
+
+	PROCEDURE AccKey
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	);
+
+	PROCEDURE ValidateDupValues
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	);
+
+	PROCEDURE UpdCiudnomb
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		isbCiudnomb$ in Jp_Ciudad.Ciudnomb%type
+	);
+
+	PROCEDURE UpdCiudpais
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCiudpais$ in Jp_Ciudad.Ciudpais%type
+	);
+
+	function fnuGetCiudcodi
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Ciudad.Ciudcodi%type;
+
+	function fsbGetCiudnomb
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Ciudad.Ciudnomb%type;
+
+	function fnuGetCiudpais
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Ciudad.Ciudpais%type;
+
+
+END pktblJp_Ciudad;
+/
+CREATE OR REPLACE PACKAGE BODY pktblJp_Ciudad
+IS
+
+   -------------------------
+   -- PRIVATE VARIABLES
+   -------------------------
+   -- Record Tabla Jp_Ciudad
+   rcJp_Ciudad cuJp_Ciudad%rowtype;
+   -- Record nulo de la Tabla Jp_Ciudad
+   rcRecordNull Jp_Ciudad%rowtype;
+   -----------------
+   -- CONSTANTES
+   -----------------
+	csbVersion constant varchar2(20) := 'SAO414826';
+	CACHE constant number := 1; -- Buscar en Cache
+	-------------------------
+	-- PRIVATE CONSTANTS
+	-------------------------
+   cnuRECORD_NO_EXISTE constant number(1) := 1; -- Reg. no esta en BD
+	cnuRECORD_YA_EXISTE constant number(1) := 2; -- Reg. ya esta en BD
+	cbsTable      constant varchar2(30) := 'JP_CIUDAD'; -- Nombre tabla
+	cnuGeEntityId constant varchar2(30) := 9280; -- Id de Ge_entity
+	-------------------------
+	-- PRIVATE METHODS
+	-------------------------
+	function fsbGetMessageDescription
+	(
+		inuMenscodi	IN number
+	)
+	return varchar2
+	is 
+	      sbMessage varchar2(32000);
+	      sbTableDescription varchar2(32000);
+	BEGIN
+	    if (cnuGeEntityId > 0 and dage_entity.fblExist (cnuGeEntityId))  then
+	          sbTableDescription:= dage_entity.fsbGetDisplay_name(cnuGeEntityId);
+	    end if;
+
+		sbMessage := dage_message.fsbgetdescription(inuMenscodi);
+	    if sbTableDescription is null then
+	          sbMessage := replace(sbMessage,'%s1',cbsTable);
+	    else
+	          sbMessage := replace(sbMessage,'%s1','(' ||cbsTable||' - '||sbTableDescription ||')');
+	    end if;
+		return sbMessage ;
+	END fsbGetMessageDescription;
+
+	function fblInMemory
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type
+	)
+	RETURN boolean is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.fblInMemory');
+		if(
+			rcJp_Ciudad.Ciudcodi = inuCiudcodi
+		) then
+			pkErrors.Pop;
+			return(TRUE);
+		end if;
+		pkErrors.Pop;
+		return( FALSE );
+	END fblInMemory;
+
+	procedure LoadRecord
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type
+	) is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.LoadRecord');
+		if cuJp_Ciudad%isopen then
+			close cuJp_Ciudad;
+		end if;
+		-- Accesa Jp_Ciudad de la BD;
+		open cuJp_Ciudad(inuCiudcodi);
+
+		fetch cuJp_Ciudad into rcJp_Ciudad;
+		if ( cuJp_Ciudad%notfound ) then 
+			close cuJp_Ciudad;
+			pkErrors.Pop;
+			rcJp_Ciudad := rcRecordNull;
+			return;
+		end if;
+		close cuJp_Ciudad;
+		pkErrors.Pop;
+	END LoadRecord;
+
+	procedure Load
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type
+	) is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.Load');
+		LoadRecord(inuCiudcodi);
+
+		-- Evalua si se encontro el registro en la Base de datos;
+		if ( rcJp_Ciudad.Ciudcodi is null ) then
+			pkErrors.Pop;
+			raise NO_DATA_FOUND;
+		end if;
+		pkErrors.Pop;
+	EXCEPTION
+		when NO_DATA_FOUND then
+			Errors.setbsserror(cnuRECORD_NO_EXISTE,fsbGetMessageDescription(cnuRECORD_NO_EXISTE));
+			raise LOGIN_DENIED;
+	END Load;
+
+    FUNCTION fsbVersion
+    RETURN varchar2
+	IS
+	BEGIN
+		return csbVersion;
+	END fsbVersion;
+
+	PROCEDURE AccKey
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.AccKey');
+		-- Valida si debe buscar primero en memoria Cache
+		if ( inuCACHE = CACHE ) then
+            if ( fblInMemory(inuCiudcodi)) then
+				pkErrors.Pop;
+				return;
+			end if;
+		end if;
+
+		Load(inuCiudcodi);
+		pkErrors.Pop;
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END AccKey;
+
+	procedure ClearMemory is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.ClearMemory');
+		rcJp_Ciudad := rcRecordNull;
+		pkErrors.Pop;
+	END ClearMemory;
+
+	PROCEDURE DelRecord
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type
+	)	 is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.DelRecord');
+		-- Elimina registro de la Tabla Jp_Ciudad
+		DELETE Jp_Ciudad
+		WHERE
+       		Ciudcodi=inuCiudcodi;
+		if ( sql%notfound ) then
+			pkErrors.Pop;
+			raise NO_DATA_FOUND;
+		end if;
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when NO_DATA_FOUND then
+			Errors.setbsserror(cnuRECORD_NO_EXISTE,fsbGetMessageDescription(cnuRECORD_NO_EXISTE));
+			raise LOGIN_DENIED;
+	END DelRecord;
+
+	PROCEDURE DelRecords
+	(
+		inuCiudcodi in out nocopy tyCiudcodi
+	) is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.DelRecords');
+		-- Elimina registro de la Tabla Jp_Ciudad
+		FORALL indx in inuCiudcodi.first .. inuCiudcodi.last
+		DELETE Jp_Ciudad
+		WHERE 
+            Ciudcodi = inuCiudcodi(indx);
+		if ( sql%notfound ) then
+			pkErrors.Pop;
+			raise NO_DATA_FOUND;
+		end if;
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when NO_DATA_FOUND then
+			Errors.setbsserror(cnuRECORD_NO_EXISTE,fsbGetMessageDescription(cnuRECORD_NO_EXISTE));
+			raise LOGIN_DENIED;
+	END DelRecords;
+
+	PROCEDURE InsForEachColumn
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		isbCiudnomb in Jp_Ciudad.Ciudnomb%type,
+		inuCiudpais in Jp_Ciudad.Ciudpais%type
+	) is
+	   rcRecord Jp_Ciudad%rowtype;
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.InsForEachColumn');
+		rcRecord.Ciudcodi := inuCiudcodi;
+		rcRecord.Ciudnomb := isbCiudnomb;
+		rcRecord.Ciudpais := inuCiudpais;
+		InsRecord( rcRecord );
+		pkErrors.Pop;
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END InsForEachColumn;
+
+	PROCEDURE InsForEachColumnBulk
+	(
+		inuCiudcodi in out nocopy tyCiudcodi,
+		isbCiudnomb in out nocopy tyCiudnomb,
+		inuCiudpais in out nocopy tyCiudpais
+	) is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.InsForEachColumnBulk');
+		FORALL indx in inuCiudcodi.first .. inuCiudcodi.last
+		INSERT INTO Jp_Ciudad
+		(
+			Ciudcodi,
+			Ciudnomb,
+			Ciudpais
+		)
+		VALUES
+		(
+			inuCiudcodi(indx),
+			isbCiudnomb(indx),
+			inuCiudpais(indx)
+		);
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when DUP_VAL_ON_INDEX then
+			Errors.setbsserror(cnuRECORD_YA_EXISTE,fsbGetMessageDescription(cnuRECORD_YA_EXISTE));
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END InsForEachColumnBulk;
+
+	PROCEDURE insRecord
+	(
+		ircRecord in Jp_Ciudad%rowtype
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.InsRecord');
+		INSERT INTO Jp_Ciudad
+		(
+			Ciudcodi,
+			Ciudnomb,
+			Ciudpais
+		)
+		VALUES
+		(
+			ircRecord.Ciudcodi,
+			ircRecord.Ciudnomb,
+			ircRecord.Ciudpais
+		);
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when DUP_VAL_ON_INDEX then
+			Errors.setbsserror(cnuRECORD_YA_EXISTE,fsbGetMessageDescription(cnuRECORD_YA_EXISTE));
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END InsRecord;
+
+	PROCEDURE InsRecords
+	(
+		irctbRecord in out nocopy tytbJp_Ciudad
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.InsRecords');
+		FORALL indx in irctbRecord.Ciudcodi.first .. irctbRecord.Ciudcodi.last
+		INSERT INTO Jp_Ciudad
+		(
+			Ciudcodi,
+			Ciudnomb,
+			Ciudpais
+		)
+		VALUES
+		(
+			irctbRecord.Ciudcodi(indx),
+			irctbRecord.Ciudnomb(indx),
+			irctbRecord.Ciudpais(indx)
+		);
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when DUP_VAL_ON_INDEX then
+			Errors.setbsserror(cnuRECORD_YA_EXISTE,fsbGetMessageDescription(cnuRECORD_YA_EXISTE));
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END InsRecords;
+
+	PROCEDURE UpRecord
+	(
+		ircRecord in Jp_Ciudad%rowtype
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.UpRecord');
+		update Jp_Ciudad
+		SET
+				Ciudnomb = ircRecord.Ciudnomb,
+				Ciudpais = ircRecord.Ciudpais
+		WHERE	Ciudcodi = ircRecord.Ciudcodi;
+		if ( sql%notfound ) then
+			pkErrors.Pop;
+			raise NO_DATA_FOUND;
+		end if;
+		--Se limpia memoria
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when NO_DATA_FOUND then
+			Errors.setbsserror(cnuRECORD_NO_EXISTE,fsbGetMessageDescription(cnuRECORD_NO_EXISTE));
+			raise LOGIN_DENIED;
+	END UpRecord;
+
+	PROCEDURE ValidateDupValues
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.ValidateDupValues');
+		-- Valida si el registro ya existe
+		if ( fblExist( inuCiudcodi, inuCACHE ) ) then
+			Errors.setbsserror(cnuRECORD_YA_EXISTE,fsbGetMessageDescription(cnuRECORD_YA_EXISTE));
+			raise LOGIN_DENIED;
+		end if;
+		pkErrors.Pop;
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END ValidateDupValues;
+
+	FUNCTION fblExist
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN boolean is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.fblExist');
+		-- Evalua si debe Buscar en memoria cache primero
+		if ( inuCACHE = CACHE ) then
+			if ( fblInMemory( inuCiudcodi) )
+			then
+				pkErrors.Pop;
+				return( TRUE );
+			end if;
+		end if;
+		LoadRecord( inuCiudcodi);
+		if ( rcJp_Ciudad.Ciudcodi is null ) then
+			pkErrors.Pop;
+			return( FALSE );
+		end if;
+		pkErrors.Pop;
+		return( TRUE );
+	END fblExist;
+
+	FUNCTION frcGetRecord
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Ciudad%rowtype
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.frcGetRecord');
+		AccKey ( inuCiudcodi, inuCACHE);
+		pkErrors.Pop;
+		return ( rcJp_Ciudad );
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END frcGetRecord;
+
+	PROCEDURE UpdCiudnomb
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		isbCiudnomb$ in Jp_Ciudad.Ciudnomb%type
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.UpdCiudnomb');
+		UPDATE Jp_Ciudad
+		SET
+			Ciudnomb = isbCiudnomb$
+		WHERE  Ciudcodi = inuCiudcodi;
+		if ( sql%notfound ) then
+			pkErrors.Pop;
+			raise NO_DATA_FOUND;
+		end if;
+		--Se limpia memoria
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when NO_DATA_FOUND then
+			Errors.setbsserror(cnuRECORD_NO_EXISTE,fsbGetMessageDescription(cnuRECORD_NO_EXISTE));
+			raise LOGIN_DENIED;
+	END UpdCiudnomb;
+
+	PROCEDURE UpdCiudpais
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCiudpais$ in Jp_Ciudad.Ciudpais%type
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.UpdCiudpais');
+		UPDATE Jp_Ciudad
+		SET
+			Ciudpais = inuCiudpais$
+		WHERE  Ciudcodi = inuCiudcodi;
+		if ( sql%notfound ) then
+			pkErrors.Pop;
+			raise NO_DATA_FOUND;
+		end if;
+		--Se limpia memoria
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when NO_DATA_FOUND then
+			Errors.setbsserror(cnuRECORD_NO_EXISTE,fsbGetMessageDescription(cnuRECORD_NO_EXISTE));
+			raise LOGIN_DENIED;
+	END UpdCiudpais;
+
+	function fnuGetCiudcodi
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Ciudad.Ciudcodi%type
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.fnuGetCiudcodi');
+		AccKey ( inuCiudcodi, inuCACHE );
+		pkErrors.Pop;
+		return ( rcJp_Ciudad.Ciudcodi);
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END fnuGetCiudcodi;
+
+	function fsbGetCiudnomb
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Ciudad.Ciudnomb%type
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.fsbGetCiudnomb');
+		AccKey ( inuCiudcodi, inuCACHE );
+		pkErrors.Pop;
+		return ( rcJp_Ciudad.Ciudnomb);
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END fsbGetCiudnomb;
+
+	function fnuGetCiudpais
+	(
+		inuCiudcodi in Jp_Ciudad.Ciudcodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Ciudad.Ciudpais%type
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Ciudad.fnuGetCiudpais');
+		AccKey ( inuCiudcodi, inuCACHE );
+		pkErrors.Pop;
+		return ( rcJp_Ciudad.Ciudpais);
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END fnuGetCiudpais;
+
+end pktblJp_Ciudad;
+/

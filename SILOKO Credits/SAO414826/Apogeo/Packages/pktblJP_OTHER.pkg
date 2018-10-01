@@ -1,0 +1,131 @@
+CREATE OR REPLACE PACKAGE pktblJp_Other
+is 
+
+
+	-- Define colecciones de cada columna de la tabla 
+	type tyOther_Id is table of Jp_Other.Other_Id%type index by binary_integer;
+	type tyOther_D is table of Jp_Other.Other_D%type index by binary_integer;
+	type tyOther_N is table of Jp_Other.Other_N%type index by binary_integer;
+
+    type tytbJp_Other is record
+	(
+        Other_Id tyOther_Id,
+        Other_D tyOther_D,
+        Other_N tyOther_N
+	);
+
+
+    ---------------
+    -- METHODS
+    ---------------
+
+    FUNCTION fsbVersion
+    RETURN varchar2;
+
+	function fsbGetMessageDescription
+	(
+		inuMenscodi	IN number
+	)
+	return varchar2;
+
+	PROCEDURE insRecord
+	(
+		ircRecord in Jp_Other%rowtype
+	);
+
+	PROCEDURE InsRecords
+	(
+		irctbRecord in out nocopy tytbJp_Other
+	);
+
+
+END pktblJp_Other;
+/
+CREATE OR REPLACE PACKAGE BODY pktblJp_Other
+IS
+
+   -----------------
+   -- CONSTANTES
+   -----------------
+	csbVersion constant varchar2(20) := 'SAO414826';
+	cbsTable      constant varchar2(30) := 'JP_OTHER'; -- Nombre tabla
+	cnuGeEntityId constant varchar2(30) := 9190; -- Id de Ge_entity
+	-------------------------
+	-- PRIVATE METHODS
+	-------------------------
+	function fsbGetMessageDescription
+	(
+		inuMenscodi	IN number
+	)
+	return varchar2
+	is 
+	      sbMessage varchar2(32000);
+	      sbTableDescription varchar2(32000);
+	BEGIN
+	    if (cnuGeEntityId > 0 and dage_entity.fblExist (cnuGeEntityId))  then
+	          sbTableDescription:= dage_entity.fsbGetDisplay_name(cnuGeEntityId);
+	    end if;
+
+		sbMessage := dage_message.fsbgetdescription(inuMenscodi);
+	    if sbTableDescription is null then
+	          sbMessage := replace(sbMessage,'%s1',cbsTable);
+	    else
+	          sbMessage := replace(sbMessage,'%s1','(' ||cbsTable||' - '||sbTableDescription ||')');
+	    end if;
+		return sbMessage ;
+	END fsbGetMessageDescription;
+
+    FUNCTION fsbVersion
+    RETURN varchar2
+	IS
+	BEGIN
+		return csbVersion;
+	END fsbVersion;
+
+	PROCEDURE insRecord
+	(
+		ircRecord in Jp_Other%rowtype
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Other.InsRecord');
+		INSERT INTO Jp_Other
+		(
+			Other_Id,
+			Other_D,
+			Other_N
+		)
+		VALUES
+		(
+			ircRecord.Other_Id,
+			ircRecord.Other_D,
+			ircRecord.Other_N
+		);
+		pkErrors.Pop;
+	END InsRecord;
+
+	PROCEDURE InsRecords
+	(
+		irctbRecord in out nocopy tytbJp_Other
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Other.InsRecords');
+		FORALL indx in irctbRecord.Other_Id.first .. irctbRecord.Other_Id.last
+		INSERT INTO Jp_Other
+		(
+			Other_Id,
+			Other_D,
+			Other_N
+		)
+		VALUES
+		(
+			irctbRecord.Other_Id(indx),
+			irctbRecord.Other_D(indx),
+			irctbRecord.Other_N(indx)
+		);
+		pkErrors.Pop;
+	END InsRecords;
+
+end pktblJp_Other;
+/

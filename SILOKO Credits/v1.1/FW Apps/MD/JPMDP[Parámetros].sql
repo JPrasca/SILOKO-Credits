@@ -1,0 +1,523 @@
+BEGIN ut_trace.trace('********************Comenzar proceso de objeto:JPMDP******************************'); END;
+/
+DECLARE
+clXml CLOB;
+
+BEGIN
+clXml := '<?xml version="1.0" encoding="WINDOWS-1252"?>
+<APPLICATION>
+  <INFO>
+    <NAME>JPMDP</NAME>
+    <DISPLAY>Parámetros de asignación de cupo</DISPLAY>
+    <AUTHOR>OpenSystems</AUTHOR>
+    <TYPE>MD</TYPE>
+    <MODULE>OR</MODULE>
+    <SITE>
+      <APPLICATION>JPPCL</APPLICATION>
+      <QUERY>edcadf33-b8bd-4452-a051-142322e97d22</QUERY>
+    </SITE>
+    <HELP/>
+  </INFO>
+  <VIEW>
+    <TABVIEW>
+      <TABNAME>Grupos de parámetros de asignación</TABNAME>
+      <INFOCLASS>0</INFOCLASS>
+      <POSLEVEL>0,0</POSLEVEL>
+      <GRANT>CRUD</GRANT>
+      <DISPLAYTYPE>G</DISPLAYTYPE>
+      <TABATTRIBUTE>
+        <NAME>PARAMETER_ID</NAME>
+        <SEQUENCE>SEQ_OR_JPB_PARAMETERS_372850</SEQUENCE>
+        <POSITION>0</POSITION>
+      </TABATTRIBUTE>
+      <TABATTRIBUTE>
+        <NAME>PLAN_TYPE_ID</NAME>
+        <POSITION>1</POSITION>
+      </TABATTRIBUTE>
+      <TABATTRIBUTE>
+        <NAME>COUNTRY_ID</NAME>
+        <POSITION>2</POSITION>
+      </TABATTRIBUTE>
+      <TABATTRIBUTE>
+        <NAME>CITY_ID</NAME>
+        <POSITION>3</POSITION>
+      </TABATTRIBUTE>
+      <TABATTRIBUTE>
+        <NAME>STRATUM_ID</NAME>
+        <POSITION>4</POSITION>
+      </TABATTRIBUTE>
+      <TABATTRIBUTE>
+        <NAME>INF_LIMIT</NAME>
+        <POSITION>5</POSITION>
+      </TABATTRIBUTE>
+      <TABATTRIBUTE>
+        <NAME>SUP_LIMIT</NAME>
+        <POSITION>6</POSITION>
+      </TABATTRIBUTE>
+      <TABATTRIBUTE>
+        <NAME>ACTIVE_PRODUCTS</NAME>
+        <POSITION>7</POSITION>
+      </TABATTRIBUTE>
+      <TABATTRIBUTE>
+        <NAME>AMOUNT</NAME>
+        <POSITION>8</POSITION>
+      </TABATTRIBUTE>
+      <DATA>
+        <NAME>OR_JPB_PARAMETERS</NAME>
+        <MODEL>
+          <ENTITY>
+            <NAME>OR_JPB_PARAMETERS</NAME>
+            <ATTRIBUTE>
+              <NAME>PARAMETER_ID</NAME>
+              <TYPE>Number</TYPE>
+              <KEY>true</KEY>
+              <LENGTH>4</LENGTH>
+              <SCALE>0</SCALE>
+              <ISNULL>false</ISNULL>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+              <NAME>PLAN_TYPE_ID</NAME>
+              <TYPE>Number</TYPE>
+              <KEY>false</KEY>
+              <LENGTH>4</LENGTH>
+              <SCALE>0</SCALE>
+              <ISNULL>false</ISNULL>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+              <NAME>COUNTRY_ID</NAME>
+              <TYPE>Number</TYPE>
+              <KEY>false</KEY>
+              <LENGTH>4</LENGTH>
+              <SCALE>0</SCALE>
+              <ISNULL>false</ISNULL>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+              <NAME>CITY_ID</NAME>
+              <TYPE>Number</TYPE>
+              <KEY>false</KEY>
+              <LENGTH>4</LENGTH>
+              <SCALE>0</SCALE>
+              <ISNULL>false</ISNULL>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+              <NAME>STRATUM_ID</NAME>
+              <TYPE>Number</TYPE>
+              <KEY>false</KEY>
+              <LENGTH>4</LENGTH>
+              <SCALE>0</SCALE>
+              <ISNULL>false</ISNULL>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+              <NAME>INF_LIMIT</NAME>
+              <TYPE>Number</TYPE>
+              <KEY>false</KEY>
+              <LENGTH>4</LENGTH>
+              <SCALE>0</SCALE>
+              <ISNULL>false</ISNULL>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+              <NAME>SUP_LIMIT</NAME>
+              <TYPE>Number</TYPE>
+              <KEY>false</KEY>
+              <LENGTH>4</LENGTH>
+              <SCALE>0</SCALE>
+              <ISNULL>false</ISNULL>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+              <NAME>ACTIVE_PRODUCTS</NAME>
+              <TYPE>Number</TYPE>
+              <KEY>false</KEY>
+              <LENGTH>4</LENGTH>
+              <SCALE>0</SCALE>
+              <ISNULL>false</ISNULL>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+              <NAME>AMOUNT</NAME>
+              <TYPE>Decimal</TYPE>
+              <KEY>false</KEY>
+              <LENGTH>20</LENGTH>
+              <SCALE>4</SCALE>
+              <ISNULL>false</ISNULL>
+            </ATTRIBUTE>
+          </ENTITY>
+        </MODEL>
+        <VIEW>
+          <NAME>OR_JPB_PARAMETERS</NAME>
+          <DISPLAY>Grupos de parámetros de asignación</DISPLAY>
+          <SINGULARDISPLAY>Grupo de parámetros de asignación</SINGULARDISPLAY>
+          <GROUP>
+            <PARAMETER>
+              <NAME>PARAMETER_ID</NAME>
+              <DISPLAY>ID</DISPLAY>
+              <TOOLTIP>Identificador del grupo de parámetros.</TOOLTIP>
+              <READONLY>false</READONLY>
+              <REQUIRED>true</REQUIRED>
+              <VISIBLE>true</VISIBLE>
+              <STYLECASE>Upper</STYLECASE>
+              <REPRESENTATIVE>1</REPRESENTATIVE>
+            </PARAMETER>
+            <PARAMETER>
+              <NAME>PLAN_TYPE_ID</NAME>
+              <DISPLAY>Tipo de plan</DISPLAY>
+              <TOOLTIP>Tipo de plan en el que aplica el cupo.</TOOLTIP>
+              <READONLY>true</READONLY>
+              <REQUIRED>true</REQUIRED>
+              <VISIBLE>true</VISIBLE>
+              <STYLECASE>Upper</STYLECASE>
+              <REPRESENTATIVE>2</REPRESENTATIVE>
+            </PARAMETER>
+            <PARAMETER>
+              <NAME>COUNTRY_ID</NAME>
+              <DISPLAY>País</DISPLAY>
+              <TOOLTIP>País donde aplica el cupo.</TOOLTIP>
+              <READONLY>true</READONLY>
+              <REQUIRED>true</REQUIRED>
+              <VISIBLE>true</VISIBLE>
+              <STYLECASE>Upper</STYLECASE>
+              <REPRESENTATIVE>3</REPRESENTATIVE>
+            </PARAMETER>
+            <PARAMETER>
+              <NAME>CITY_ID</NAME>
+              <DISPLAY>Ciudad</DISPLAY>
+              <TOOLTIP>Ciudad donde aplica el cupo.</TOOLTIP>
+              <READONLY>true</READONLY>
+              <REQUIRED>true</REQUIRED>
+              <VISIBLE>true</VISIBLE>
+              <STYLECASE>Upper</STYLECASE>
+            </PARAMETER>
+            <PARAMETER>
+              <NAME>STRATUM_ID</NAME>
+              <DISPLAY>Estrato</DISPLAY>
+              <TOOLTIP>Estrato en que aplica el cupo.</TOOLTIP>
+              <READONLY>true</READONLY>
+              <REQUIRED>true</REQUIRED>
+              <VISIBLE>true</VISIBLE>
+              <STYLECASE>Upper</STYLECASE>
+            </PARAMETER>
+            <PARAMETER>
+              <NAME>INF_LIMIT</NAME>
+              <DISPLAY>Límite inferior</DISPLAY>
+              <TOOLTIP>Límite inferior.</TOOLTIP>
+              <READONLY>true</READONLY>
+              <REQUIRED>true</REQUIRED>
+              <VISIBLE>true</VISIBLE>
+              <STYLECASE>Upper</STYLECASE>
+            </PARAMETER>
+            <PARAMETER>
+              <NAME>SUP_LIMIT</NAME>
+              <DISPLAY>Límite superior</DISPLAY>
+              <TOOLTIP>Límite superior.</TOOLTIP>
+              <READONLY>true</READONLY>
+              <REQUIRED>true</REQUIRED>
+              <VISIBLE>true</VISIBLE>
+              <STYLECASE>Upper</STYLECASE>
+            </PARAMETER>
+            <PARAMETER>
+              <NAME>ACTIVE_PRODUCTS</NAME>
+              <DISPLAY>Productos activos</DISPLAY>
+              <TOOLTIP>Cantidad de productos activos.</TOOLTIP>
+              <READONLY>true</READONLY>
+              <REQUIRED>true</REQUIRED>
+              <VISIBLE>true</VISIBLE>
+              <STYLECASE>Upper</STYLECASE>
+            </PARAMETER>
+            <PARAMETER>
+              <NAME>AMOUNT</NAME>
+              <DISPLAY>Monto a asignar</DISPLAY>
+              <TOOLTIP>Monto a asignar.</TOOLTIP>
+              <READONLY>true</READONLY>
+              <REQUIRED>true</REQUIRED>
+              <VISIBLE>true</VISIBLE>
+              <STYLECASE>Upper</STYLECASE>
+            </PARAMETER>
+          </GROUP>
+        </VIEW>
+        <CTRL>
+          <NAME>OR_JPB_PARAMETERS</NAME>
+          <PARAMETERS>
+            <NAME>PARAMETER_ID</NAME>
+            <COMPONENT>
+              <TYPE>Textbox</TYPE>
+            </COMPONENT>
+          </PARAMETERS>
+          <PARAMETERS>
+            <NAME>PLAN_TYPE_ID</NAME>
+            <COMPONENT>
+              <TYPE>NLOV</TYPE>
+              <SOURCE>
+                <NAME>PLAN_TYPE_ID</NAME>
+                <MODEL>
+                  <ENTITY>
+                    <NAME>72c4e027-615c-4db0-9e4e-3097da3e9bbc</NAME>
+                    <ATTRIBUTE>
+                      <NAME>ID</NAME>
+                      <TYPE>Number</TYPE>
+                      <KEY>false</KEY>
+                      <LENGTH>4</LENGTH>
+                      <SCALE>0</SCALE>
+                      <ISNULL>false</ISNULL>
+                    </ATTRIBUTE>
+                    <ATTRIBUTE>
+                      <NAME>DESCRIPTION</NAME>
+                      <TYPE>Varchar</TYPE>
+                      <KEY>false</KEY>
+                      <LENGTH>100</LENGTH>
+                      <SCALE>0</SCALE>
+                      <ISNULL>false</ISNULL>
+                    </ATTRIBUTE>
+                  </ENTITY>
+                  <PROXY>
+                    <NAME>PLAN_TYPE_ID</NAME>
+                    <ENTITY>OR_JPB_PARAMETERS</ENTITY>
+                    <SOURCE>SELECT 
+	OR_JPB_PLAN_TYPE.PLAN_TYPE_ID ID,
+	OR_JPB_PLAN_TYPE.DESCRIPTION DESCRIPTION
+FROM
+	OR_JPB_PLAN_TYPE
+ORDER BY
+	OR_JPB_PLAN_TYPE.DESCRIPTION</SOURCE>
+                    <TYPE>Statement</TYPE>
+                  </PROXY>
+                </MODEL>
+                <VIEW>
+                  <NAME>PLAN_TYPE_ID</NAME>
+                  <DISPLAY>Tipo de plan</DISPLAY>
+                  <ATTRIBUTE>
+                    <NAME>ID</NAME>
+                    <DISPLAY>ID</DISPLAY>
+                    <VISIBLE>true</VISIBLE>
+                  </ATTRIBUTE>
+                  <ATTRIBUTE>
+                    <NAME>DESCRIPTION</NAME>
+                    <DISPLAY>Tipo de plan</DISPLAY>
+                    <VISIBLE>true</VISIBLE>
+                  </ATTRIBUTE>
+                </VIEW>
+              </SOURCE>
+            </COMPONENT>
+          </PARAMETERS>
+          <PARAMETERS>
+            <NAME>COUNTRY_ID</NAME>
+            <COMPONENT>
+              <TYPE>NLOV</TYPE>
+              <SOURCE>
+                <NAME>COUNTRY_ID</NAME>
+                <MODEL>
+                  <ENTITY>
+                    <NAME>f4d46af5-4728-4998-b12b-dcf99ac3a17b</NAME>
+                    <ATTRIBUTE>
+                      <NAME>ID</NAME>
+                      <TYPE>Number</TYPE>
+                      <KEY>false</KEY>
+                      <LENGTH>4</LENGTH>
+                      <SCALE>0</SCALE>
+                      <ISNULL>false</ISNULL>
+                    </ATTRIBUTE>
+                    <ATTRIBUTE>
+                      <NAME>DESCRIPTION</NAME>
+                      <TYPE>Varchar</TYPE>
+                      <KEY>false</KEY>
+                      <LENGTH>100</LENGTH>
+                      <SCALE>0</SCALE>
+                      <ISNULL>false</ISNULL>
+                    </ATTRIBUTE>
+                  </ENTITY>
+                  <PROXY>
+                    <NAME>COUNTRY_ID</NAME>
+                    <ENTITY>OR_JPB_PARAMETERS</ENTITY>
+                    <SOURCE>SELECT
+	OR_JPB_COUNTRY.COUNTRY_ID ID,
+	OR_JPB_COUNTRY.DESCRIPTION DESCRIPTION
+FROM
+	OR_JPB_COUNTRY
+ORDER BY
+	OR_JPB_COUNTRY.DESCRIPTION</SOURCE>
+                    <TYPE>Statement</TYPE>
+                  </PROXY>
+                </MODEL>
+                <VIEW>
+                  <NAME>COUNTRY_ID</NAME>
+                  <DISPLAY>País</DISPLAY>
+                  <ATTRIBUTE>
+                    <NAME>ID</NAME>
+                    <DISPLAY>ID</DISPLAY>
+                    <VISIBLE>true</VISIBLE>
+                  </ATTRIBUTE>
+                  <ATTRIBUTE>
+                    <NAME>DESCRIPTION</NAME>
+                    <DISPLAY>País</DISPLAY>
+                    <VISIBLE>true</VISIBLE>
+                  </ATTRIBUTE>
+                </VIEW>
+              </SOURCE>
+            </COMPONENT>
+          </PARAMETERS>
+          <PARAMETERS>
+            <NAME>CITY_ID</NAME>
+            <COMPONENT>
+              <TYPE>NLOV</TYPE>
+              <SOURCE>
+                <NAME>CITY_ID</NAME>
+                <MODEL>
+                  <ENTITY>
+                    <NAME>9e7fe9b9-d225-4df9-89de-16017f828044</NAME>
+                    <ATTRIBUTE>
+                      <NAME>ID</NAME>
+                      <TYPE>Number</TYPE>
+                      <KEY>false</KEY>
+                      <LENGTH>4</LENGTH>
+                      <SCALE>0</SCALE>
+                      <ISNULL>false</ISNULL>
+                    </ATTRIBUTE>
+                    <ATTRIBUTE>
+                      <NAME>DESCRIPTION</NAME>
+                      <TYPE>Varchar</TYPE>
+                      <KEY>false</KEY>
+                      <LENGTH>100</LENGTH>
+                      <SCALE>0</SCALE>
+                      <ISNULL>false</ISNULL>
+                    </ATTRIBUTE>
+                  </ENTITY>
+                  <PROXY>
+                    <NAME>CITY_ID</NAME>
+                    <PARAMETER>
+                      <NAME>COUNTRY_ID</NAME>
+                      <TYPE>Varchar</TYPE>
+                      <MODE>Input</MODE>
+                      <SCALE>0</SCALE>
+                      <LENGTH>200</LENGTH>
+                    </PARAMETER>
+                    <ENTITY>OR_JPB_PARAMETERS</ENTITY>
+                    <SOURCE>SELECT
+	OR_JPB_CITY.CITY_ID ID,
+	OR_JPB_CITY.DESCRIPTION DESCRIPTION
+FROM
+	OR_JPB_CITY
+WHERE
+	OR_JPB_CITY.COUNTRY_ID = [COUNTRY_ID]
+ORDER BY
+	OR_JPB_CITY.DESCRIPTION</SOURCE>
+                    <TYPE>Statement</TYPE>
+                  </PROXY>
+                </MODEL>
+                <VIEW>
+                  <NAME>CITY_ID</NAME>
+                  <DISPLAY>Ciudad</DISPLAY>
+                  <ATTRIBUTE>
+                    <NAME>ID</NAME>
+                    <DISPLAY>ID</DISPLAY>
+                    <VISIBLE>true</VISIBLE>
+                  </ATTRIBUTE>
+                  <ATTRIBUTE>
+                    <NAME>DESCRIPTION</NAME>
+                    <DISPLAY>Ciudad</DISPLAY>
+                    <VISIBLE>true</VISIBLE>
+                  </ATTRIBUTE>
+                  <PARAMETER>
+                    <NAME>COUNTRY_ID</NAME>
+                    <DISPLAY>COUNTRY_ID</DISPLAY>
+                    <READONLY>false</READONLY>
+                    <REQUIRED>false</REQUIRED>
+                    <VISIBLE>false</VISIBLE>
+                    <STYLECASE>Normal</STYLECASE>
+                  </PARAMETER>
+                </VIEW>
+              </SOURCE>
+            </COMPONENT>
+          </PARAMETERS>
+          <PARAMETERS>
+            <NAME>STRATUM_ID</NAME>
+            <COMPONENT>
+              <TYPE>NLOV</TYPE>
+              <SOURCE>
+                <NAME>STRATUM_ID</NAME>
+                <MODEL>
+                  <ENTITY>
+                    <NAME>e9c0b468-80a7-4e29-bfa5-8549c93de2e9</NAME>
+                    <ATTRIBUTE>
+                      <NAME>ID</NAME>
+                      <TYPE>Number</TYPE>
+                      <KEY>false</KEY>
+                      <LENGTH>4</LENGTH>
+                      <SCALE>0</SCALE>
+                      <ISNULL>false</ISNULL>
+                    </ATTRIBUTE>
+                    <ATTRIBUTE>
+                      <NAME>DESCRIPTION</NAME>
+                      <TYPE>Varchar</TYPE>
+                      <KEY>false</KEY>
+                      <LENGTH>100</LENGTH>
+                      <SCALE>0</SCALE>
+                      <ISNULL>false</ISNULL>
+                    </ATTRIBUTE>
+                  </ENTITY>
+                  <PROXY>
+                    <NAME>STRATUM_ID</NAME>
+                    <ENTITY>OR_JPB_PARAMETERS</ENTITY>
+                    <SOURCE>SELECT 
+	OR_JPB_STRATUM.STRATUM_ID ID,
+	OR_JPB_STRATUM.DESCRIPTION DESCRIPTION
+FROM
+	OR_JPB_STRATUM
+ORDER BY
+	OR_JPB_STRATUM.DESCRIPTION</SOURCE>
+                    <TYPE>Statement</TYPE>
+                  </PROXY>
+                </MODEL>
+                <VIEW>
+                  <NAME>STRATUM_ID</NAME>
+                  <DISPLAY>Estrato</DISPLAY>
+                  <ATTRIBUTE>
+                    <NAME>ID</NAME>
+                    <DISPLAY>Identificador</DISPLAY>
+                    <VISIBLE>true</VISIBLE>
+                  </ATTRIBUTE>
+                  <ATTRIBUTE>
+                    <NAME>DESCRIPTION</NAME>
+                    <DISPLAY>Descripción</DISPLAY>
+                    <VISIBLE>true</VISIBLE>
+                  </ATTRIBUTE>
+                </VIEW>
+              </SOURCE>
+            </COMPONENT>
+          </PARAMETERS>
+          <PARAMETERS>
+            <NAME>INF_LIMIT</NAME>
+            <COMPONENT>
+              <TYPE>Textbox</TYPE>
+            </COMPONENT>
+          </PARAMETERS>
+          <PARAMETERS>
+            <NAME>SUP_LIMIT</NAME>
+            <COMPONENT>
+              <TYPE>Textbox</TYPE>
+            </COMPONENT>
+          </PARAMETERS>
+          <PARAMETERS>
+            <NAME>ACTIVE_PRODUCTS</NAME>
+            <COMPONENT>
+              <TYPE>Textbox</TYPE>
+            </COMPONENT>
+          </PARAMETERS>
+          <PARAMETERS>
+            <NAME>AMOUNT</NAME>
+            <COMPONENT>
+              <TYPE>Textbox</TYPE>
+            </COMPONENT>
+          </PARAMETERS>
+        </CTRL>
+      </DATA>
+    </TABVIEW>
+  </VIEW>
+</APPLICATION>
+';
+ge_boapplication.Save(clXml);
+commit;
+exception when others then
+rollback;
+ut_trace.trace('||**ERROR:'|| sqlerrm);
+raise;
+END;
+/
+BEGIN ut_trace.trace('********************FIN  proceso de objeto:JPMDP******************************'); end;
+/

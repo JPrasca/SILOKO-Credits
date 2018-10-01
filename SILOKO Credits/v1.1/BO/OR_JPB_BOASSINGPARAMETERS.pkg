@@ -1,0 +1,357 @@
+CREATE OR REPLACE PACKAGE OR_JPB_BOAssignParameters
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BOAssignParameters
+
+    Descripción   : Objeto de negocio relacionado a la información de posibles
+                    cupos de crédito asociados a los clientes SILOKO.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+    */
+    
+    
+	-- Declaracion de Tipos de datos publicos
+
+	-- Declaracion de variables publicas
+
+	-- Declaracion de metodos publicos
+	
+	/**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         fsbVersion
+    Descripción:    Obtiene la versión del paquete
+    ***********************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2;
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         RegistParamSet
+    Descripción:    Método público que se usa para registrar un conjunto de parámetros
+                    o criterios de asignación de cupos.
+    ***********************************************************************/
+    PROCEDURE RegistParamSet
+    (
+        inuCountryId        IN          OR_jpb_parameters.country_id%type,
+        inuCityId           IN          OR_jpb_parameters.city_id%type,
+        inuPlanTypeId       IN          or_jpb_parameters.plan_type_id%type,
+        inuStratumId        IN          OR_jpb_parameters.stratum_id%type,
+        inuActiveProducts   IN          OR_jpb_parameters.active_products%type,
+        inuSupLimit         IN          OR_jpb_parameters.sup_limit%type,
+        inuInfLimit         IN          OR_jpb_parameters.inf_limit%type,
+        inuAmount           IN          or_jpb_parameters.amount%type,
+        onuErrorCode        out nocopy  ge_error_log.message_id%type,
+        osbErrorMess        out nocopy  ge_error_log.description%type
+    );
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         FillTbParameters
+    Descripción:    Llena una tabla PL, de este mismo paquete, con los datos
+                    de conjuntos de parámetros de asignación de cupo asociados
+                    a una ciudad
+    ***********************************************************************/
+    PROCEDURE FillTbParameters
+    (
+        inuCityId   or_jpb_parameters.city_id%type
+    );
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         CheckRange
+    Descripción:    Verifica que, si existe un conjunto de criterios/parámetros
+                    de asignación de cupo, no haya solapamiento entre rangos de
+                    antiguedad
+    ***********************************************************************/
+    PROCEDURE CheckRange
+    (
+        inuSupLimit         IN          OR_jpb_parameters.sup_limit%type,
+        inuInfLimit         IN          OR_jpb_parameters.inf_limit%type,
+        onuErrorCode        out nocopy  ge_error_log.message_id%type,
+        osbErrorMess        out nocopy  ge_error_log.description%type
+
+    );
+    
+    
+
+
+END OR_JPB_BOAssignParameters;
+/
+CREATE OR REPLACE PACKAGE BODY OR_JPB_BOAssignParameters
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BOAssignParameters
+
+    Descripción   : Objeto de negocio relacionados a la información de posibles cupos
+                    asiciados a los clientes SILOKO..
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+
+    05-05-2018    jprascaSAO414826
+    Creación
+    */
+    
+    
+	-- Declaracion de variables y tipos globales privados del paquete
+    CSBVERSION          CONSTANT VARCHAR2(10) := 'SAO414826';
+    tbAssignParameters  daor_jpb_parameters.tytbOR_jpb_parameters;
+
+
+	-- Definicion de metodos publicos y privados del paquete
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : FSBVERSION
+
+    Descripción   : Función pública que se usa para obtener la versión del paquete
+
+    Parámetros    :
+
+    Retorno       : CSBVERSION - retorna la variable que contiene la versión
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2 IS
+    BEGIN
+        return CSBVERSION;
+    END FSBVERSION;
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : RegistParamSet
+
+    Descripción   : Método público que se usa para registrar un conjunto de parámetros
+                    o criterios de asignación de cupos.
+
+    Parámetros    : inuCountryId        -  Id del país
+                    inuCityId           -  Id de la ciudad
+                    inuPlanTypeId       -  Tipo de plan
+                    inuStratumId        -  Estrato
+                    inuActiveProducts   -  Cantidad de productos activos
+                    inuSupLimit         -  Límite inferior del rango de antiguedad
+                    inuInfLimit         -  Límite superior del rango de antiguedad
+                    inuAmount           -  Monto a aplicar
+                    onuErrorCode        -  Código del mensaje
+                    osbErrorMess        -  Mensaje
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE RegistParamSet
+    (
+        inuCountryId        IN          OR_jpb_parameters.country_id%type,
+        inuCityId           IN          OR_jpb_parameters.city_id%type,
+        inuPlanTypeId       IN          or_jpb_parameters.plan_type_id%type,
+        inuStratumId        IN          OR_jpb_parameters.stratum_id%type,
+        inuActiveProducts   IN          OR_jpb_parameters.active_products%type,
+        inuSupLimit         IN          OR_jpb_parameters.sup_limit%type,
+        inuInfLimit         IN          OR_jpb_parameters.inf_limit%type,
+        inuAmount           IN          or_jpb_parameters.amount%type,
+        onuErrorCode        out nocopy  ge_error_log.message_id%type,
+        osbErrorMess        out nocopy  ge_error_log.description%type
+    )
+    IS
+        rcParamSet  daor_jpb_parameters.styOR_jpb_parameters;
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOAssignParameters.RegistParamSet', 7);
+
+        CheckRange(inuSupLimit, inuInfLimit, onuErrorCode, osbErrorMess);
+        
+        
+        IF onuErrorCode = 0
+        THEN
+            rcParamSet.parameter_id    := seq.getnext('SEQ_OR_JPB_PARAMETERS_372850');
+            rcParamSet.country_id      := inuCountryId;
+            rcParamSet.city_id         := inuCityId;
+            rcParamSet.plan_type_id    := inuPlanTypeId;
+            rcParamSet.stratum_id      := inuStratumId;
+            rcParamSet.active_products := inuActiveProducts;
+            rcParamSet.sup_limit       := inuSupLimit;
+            rcParamSet.inf_limit       := inuInfLimit;
+            rcParamSet.amount          := inuAmount;
+            
+            
+            daor_jpb_parameters.insRecord(rcParamSet);
+        ELSE
+            RAISE ex.CONTROLLED_ERROR;
+        END IF;
+
+        ut_trace.trace('Termina OR_JPB_BOAssignParameters.RegistParamSet', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            Errors.seterror;
+            Errors.geterror(onuErrorCode, osbErrorMess);
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOAssignParameters.RegistParamSet', 7);
+            --raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOAssignParameters.RegistParamSet', 7);
+            Errors.setError;
+            Errors.geterror(onuErrorCode, osbErrorMess);
+            --raise ex.CONTROLLED_ERROR;
+    END RegistParamSet;
+    
+    
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : FillTbParameters
+
+    Descripción   : Método público que se usa para llenar una tabla en memoria
+                    que contiene los conjuntos de parámetros de asignación asociados
+                    a una ciudad.
+
+    Parámetros    : inuCityId           - Identificador de la ciudad
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE FillTbParameters
+    (
+        inuCityId   or_jpb_parameters.city_id%type
+    )
+    IS
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOAssignParameters.FillTbParameters', 7);
+
+        tbAssignParameters.DELETE;
+
+        OR_JPB_BCAssignParameters.FillTbParameters(inuCityId, tbAssignParameters);
+
+        ut_trace.trace('Termina OR_JPB_BOAssignParameters.FillTbParameters', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOAssignParameters.FillTbParameters', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOAssignParameters.FillTbParameters', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END FillTbParameters;
+    
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : CheckRange
+
+    Descripción   : Método que verifica que, si existe un conjunto de criterios/parámetros
+                    de asignación de cupo, no haya solapamiento entre rangos de
+                    antiguedad.
+
+    Parámetros    : inuSupLimit     -  Límite superior en el rango de años de antigüedad
+                    inuInfLimit     -  Límite inferior en el rango de años de antigüedad
+                    onuErrorCode    -  Código del error a mostrar en pantalla
+                    osbErrorMess    -  Mensaje de error a mostrar en pantalla
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE CheckRange
+    (
+        inuSupLimit         IN          OR_jpb_parameters.sup_limit%type,
+        inuInfLimit         IN          OR_jpb_parameters.inf_limit%type,
+        onuErrorCode        out nocopy  ge_error_log.message_id%type,
+        osbErrorMess        out nocopy  ge_error_log.description%type
+        
+    )
+    IS
+        nuIndex or_jpb_parameters.parameter_id%type := 0;
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOAssignParameters.CheckRange', 7);
+        nuIndex := tbAssignParameters.FIRST;
+        
+        /*recorre hasta hallar o no solapamiento ente rangos */
+        LOOP
+            EXIT WHEN nuIndex IS NULL;
+            ut_trace.trace(
+                'Ontiene los rangos '||tbAssignParameters(nuIndex).inf_limit
+                ||' vs '||inuInfLimit||', y '||tbAssignParameters(nuIndex).sup_limit
+                ||' vs '||inuSupLimit
+                , 7);
+            IF (inuInfLimit BETWEEN tbAssignParameters(nuIndex).inf_limit AND tbAssignParameters(nuIndex).sup_limit)
+            OR (inuSupLimit BETWEEN tbAssignParameters(nuIndex).inf_limit AND tbAssignParameters(nuIndex).sup_limit)
+            OR (tbAssignParameters(nuIndex).inf_limit BETWEEN inuInfLimit AND inuSupLimit)
+            OR (tbAssignParameters(nuIndex).sup_limit BETWEEN inuInfLimit AND inuSupLimit)
+            THEN
+                ut_trace.trace('Se solapan... error -16002');
+                onuErrorCode := -16002;
+                osbErrorMess := dage_message.fsbgetdescription(-16002); --ge_message
+                EXIT;
+            END IF;
+            
+            nuIndex := tbAssignParameters.NEXT(nuIndex);
+        END LOOP;
+        
+        ut_trace.trace('Finaliza OR_JPB_BOAssignParameters.CheckRange', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOAssignParameters.CheckRange', 7);
+            Errors.setError;
+            Errors.getError(onuErrorCode, osbErrorMess);
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOAssignParameters.CheckRange', 7);
+            Errors.setError;
+            Errors.getError(onuErrorCode, osbErrorMess);
+
+    END CheckRange;
+    
+END OR_JPB_BOAssignParameters;
+/

@@ -1,0 +1,569 @@
+CREATE OR REPLACE PACKAGE pktblJp_Pais
+is 
+    ---------------
+    -- VARIABLES
+    ---------------
+    -- Cursor para accesar Jp_Pais
+    cursor cuJp_Pais
+    (
+		inuPaiscodi in Jp_Pais.Paiscodi%type
+    )
+    is
+        SELECT *
+        FROM Jp_Pais
+        WHERE  Paiscodi = inuPaiscodi;
+
+
+	-- Define colecciones de cada columna de la tabla 
+	type tyPaiscodi is table of Jp_Pais.Paiscodi%type index by binary_integer;
+	type tyPaisnomb is table of Jp_Pais.Paisnomb%type index by binary_integer;
+
+    /* Tipo Tabla de records*/
+    type tytbRowJp_Pais is table of Jp_Pais%rowtype index by binary_integer;
+
+    type tytbJp_Pais is record
+	(
+        Paiscodi tyPaiscodi,
+        Paisnomb tyPaisnomb
+	);
+
+
+    ---------------
+    -- METHODS
+    ---------------
+
+    FUNCTION fsbVersion
+    RETURN varchar2;
+
+	function fsbGetMessageDescription
+	(
+		inuMenscodi	IN number
+	)
+	return varchar2;
+
+	PROCEDURE insRecord
+	(
+		ircRecord in Jp_Pais%rowtype
+	);
+
+	PROCEDURE InsRecords
+	(
+		irctbRecord in out nocopy tytbJp_Pais
+	);
+
+	PROCEDURE InsForEachColumn
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		isbPaisnomb in Jp_Pais.Paisnomb%type
+	);
+
+	PROCEDURE InsForEachColumnBulk
+	(
+		inuPaiscodi in out nocopy tyPaiscodi,
+		isbPaisnomb in out nocopy tyPaisnomb
+	);
+
+	PROCEDURE ClearMemory;
+
+	PROCEDURE DelRecord
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type
+	);
+
+	PROCEDURE UpRecord
+	(
+		ircRecord in Jp_Pais%rowtype
+	);
+
+	PROCEDURE DelRecords
+	(
+		inuPaiscodi in out nocopy tyPaiscodi
+	);
+
+	FUNCTION fblExist
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN boolean;
+
+	FUNCTION frcGetRecord
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Pais%rowtype;
+
+	PROCEDURE AccKey
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		inuCACHE in number default 1
+	);
+
+	PROCEDURE ValidateDupValues
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		inuCACHE in number default 1
+	);
+
+	PROCEDURE UpdPaisnomb
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		isbPaisnomb$ in Jp_Pais.Paisnomb%type
+	);
+
+	function fnuGetPaiscodi
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Pais.Paiscodi%type;
+
+	function fsbGetPaisnomb
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Pais.Paisnomb%type;
+
+
+END pktblJp_Pais;
+/
+CREATE OR REPLACE PACKAGE BODY pktblJp_Pais
+IS
+
+   -------------------------
+   -- PRIVATE VARIABLES
+   -------------------------
+   -- Record Tabla Jp_Pais
+   rcJp_Pais cuJp_Pais%rowtype;
+   -- Record nulo de la Tabla Jp_Pais
+   rcRecordNull Jp_Pais%rowtype;
+   -----------------
+   -- CONSTANTES
+   -----------------
+	csbVersion constant varchar2(20) := 'SAO414826';
+	CACHE constant number := 1; -- Buscar en Cache
+	-------------------------
+	-- PRIVATE CONSTANTS
+	-------------------------
+   cnuRECORD_NO_EXISTE constant number(1) := 1; -- Reg. no esta en BD
+	cnuRECORD_YA_EXISTE constant number(1) := 2; -- Reg. ya esta en BD
+	cbsTable      constant varchar2(30) := 'JP_PAIS'; -- Nombre tabla
+	cnuGeEntityId constant varchar2(30) := 9279; -- Id de Ge_entity
+	-------------------------
+	-- PRIVATE METHODS
+	-------------------------
+	function fsbGetMessageDescription
+	(
+		inuMenscodi	IN number
+	)
+	return varchar2
+	is 
+	      sbMessage varchar2(32000);
+	      sbTableDescription varchar2(32000);
+	BEGIN
+	    if (cnuGeEntityId > 0 and dage_entity.fblExist (cnuGeEntityId))  then
+	          sbTableDescription:= dage_entity.fsbGetDisplay_name(cnuGeEntityId);
+	    end if;
+
+		sbMessage := dage_message.fsbgetdescription(inuMenscodi);
+	    if sbTableDescription is null then
+	          sbMessage := replace(sbMessage,'%s1',cbsTable);
+	    else
+	          sbMessage := replace(sbMessage,'%s1','(' ||cbsTable||' - '||sbTableDescription ||')');
+	    end if;
+		return sbMessage ;
+	END fsbGetMessageDescription;
+
+	function fblInMemory
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type
+	)
+	RETURN boolean is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.fblInMemory');
+		if(
+			rcJp_Pais.Paiscodi = inuPaiscodi
+		) then
+			pkErrors.Pop;
+			return(TRUE);
+		end if;
+		pkErrors.Pop;
+		return( FALSE );
+	END fblInMemory;
+
+	procedure LoadRecord
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type
+	) is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.LoadRecord');
+		if cuJp_Pais%isopen then
+			close cuJp_Pais;
+		end if;
+		-- Accesa Jp_Pais de la BD;
+		open cuJp_Pais(inuPaiscodi);
+
+		fetch cuJp_Pais into rcJp_Pais;
+		if ( cuJp_Pais%notfound ) then 
+			close cuJp_Pais;
+			pkErrors.Pop;
+			rcJp_Pais := rcRecordNull;
+			return;
+		end if;
+		close cuJp_Pais;
+		pkErrors.Pop;
+	END LoadRecord;
+
+	procedure Load
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type
+	) is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.Load');
+		LoadRecord(inuPaiscodi);
+
+		-- Evalua si se encontro el registro en la Base de datos;
+		if ( rcJp_Pais.Paiscodi is null ) then
+			pkErrors.Pop;
+			raise NO_DATA_FOUND;
+		end if;
+		pkErrors.Pop;
+	EXCEPTION
+		when NO_DATA_FOUND then
+			Errors.setbsserror(cnuRECORD_NO_EXISTE,fsbGetMessageDescription(cnuRECORD_NO_EXISTE));
+			raise LOGIN_DENIED;
+	END Load;
+
+    FUNCTION fsbVersion
+    RETURN varchar2
+	IS
+	BEGIN
+		return csbVersion;
+	END fsbVersion;
+
+	PROCEDURE AccKey
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		inuCACHE in number default 1
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.AccKey');
+		-- Valida si debe buscar primero en memoria Cache
+		if ( inuCACHE = CACHE ) then
+            if ( fblInMemory(inuPaiscodi)) then
+				pkErrors.Pop;
+				return;
+			end if;
+		end if;
+
+		Load(inuPaiscodi);
+		pkErrors.Pop;
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END AccKey;
+
+	procedure ClearMemory is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.ClearMemory');
+		rcJp_Pais := rcRecordNull;
+		pkErrors.Pop;
+	END ClearMemory;
+
+	PROCEDURE DelRecord
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type
+	)	 is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.DelRecord');
+		-- Elimina registro de la Tabla Jp_Pais
+		DELETE Jp_Pais
+		WHERE
+       		Paiscodi=inuPaiscodi;
+		if ( sql%notfound ) then
+			pkErrors.Pop;
+			raise NO_DATA_FOUND;
+		end if;
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when NO_DATA_FOUND then
+			Errors.setbsserror(cnuRECORD_NO_EXISTE,fsbGetMessageDescription(cnuRECORD_NO_EXISTE));
+			raise LOGIN_DENIED;
+	END DelRecord;
+
+	PROCEDURE DelRecords
+	(
+		inuPaiscodi in out nocopy tyPaiscodi
+	) is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.DelRecords');
+		-- Elimina registro de la Tabla Jp_Pais
+		FORALL indx in inuPaiscodi.first .. inuPaiscodi.last
+		DELETE Jp_Pais
+		WHERE 
+            Paiscodi = inuPaiscodi(indx);
+		if ( sql%notfound ) then
+			pkErrors.Pop;
+			raise NO_DATA_FOUND;
+		end if;
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when NO_DATA_FOUND then
+			Errors.setbsserror(cnuRECORD_NO_EXISTE,fsbGetMessageDescription(cnuRECORD_NO_EXISTE));
+			raise LOGIN_DENIED;
+	END DelRecords;
+
+	PROCEDURE InsForEachColumn
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		isbPaisnomb in Jp_Pais.Paisnomb%type
+	) is
+	   rcRecord Jp_Pais%rowtype;
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.InsForEachColumn');
+		rcRecord.Paiscodi := inuPaiscodi;
+		rcRecord.Paisnomb := isbPaisnomb;
+		InsRecord( rcRecord );
+		pkErrors.Pop;
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END InsForEachColumn;
+
+	PROCEDURE InsForEachColumnBulk
+	(
+		inuPaiscodi in out nocopy tyPaiscodi,
+		isbPaisnomb in out nocopy tyPaisnomb
+	) is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.InsForEachColumnBulk');
+		FORALL indx in inuPaiscodi.first .. inuPaiscodi.last
+		INSERT INTO Jp_Pais
+		(
+			Paiscodi,
+			Paisnomb
+		)
+		VALUES
+		(
+			inuPaiscodi(indx),
+			isbPaisnomb(indx)
+		);
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when DUP_VAL_ON_INDEX then
+			Errors.setbsserror(cnuRECORD_YA_EXISTE,fsbGetMessageDescription(cnuRECORD_YA_EXISTE));
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END InsForEachColumnBulk;
+
+	PROCEDURE insRecord
+	(
+		ircRecord in Jp_Pais%rowtype
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.InsRecord');
+		INSERT INTO Jp_Pais
+		(
+			Paiscodi,
+			Paisnomb
+		)
+		VALUES
+		(
+			ircRecord.Paiscodi,
+			ircRecord.Paisnomb
+		);
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when DUP_VAL_ON_INDEX then
+			Errors.setbsserror(cnuRECORD_YA_EXISTE,fsbGetMessageDescription(cnuRECORD_YA_EXISTE));
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END InsRecord;
+
+	PROCEDURE InsRecords
+	(
+		irctbRecord in out nocopy tytbJp_Pais
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.InsRecords');
+		FORALL indx in irctbRecord.Paiscodi.first .. irctbRecord.Paiscodi.last
+		INSERT INTO Jp_Pais
+		(
+			Paiscodi,
+			Paisnomb
+		)
+		VALUES
+		(
+			irctbRecord.Paiscodi(indx),
+			irctbRecord.Paisnomb(indx)
+		);
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when DUP_VAL_ON_INDEX then
+			Errors.setbsserror(cnuRECORD_YA_EXISTE,fsbGetMessageDescription(cnuRECORD_YA_EXISTE));
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END InsRecords;
+
+	PROCEDURE UpRecord
+	(
+		ircRecord in Jp_Pais%rowtype
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.UpRecord');
+		update Jp_Pais
+		SET
+				Paisnomb = ircRecord.Paisnomb
+		WHERE	Paiscodi = ircRecord.Paiscodi;
+		if ( sql%notfound ) then
+			pkErrors.Pop;
+			raise NO_DATA_FOUND;
+		end if;
+		--Se limpia memoria
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when NO_DATA_FOUND then
+			Errors.setbsserror(cnuRECORD_NO_EXISTE,fsbGetMessageDescription(cnuRECORD_NO_EXISTE));
+			raise LOGIN_DENIED;
+	END UpRecord;
+
+	PROCEDURE ValidateDupValues
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		inuCACHE in number default 1
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.ValidateDupValues');
+		-- Valida si el registro ya existe
+		if ( fblExist( inuPaiscodi, inuCACHE ) ) then
+			Errors.setbsserror(cnuRECORD_YA_EXISTE,fsbGetMessageDescription(cnuRECORD_YA_EXISTE));
+			raise LOGIN_DENIED;
+		end if;
+		pkErrors.Pop;
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END ValidateDupValues;
+
+	FUNCTION fblExist
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN boolean is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.fblExist');
+		-- Evalua si debe Buscar en memoria cache primero
+		if ( inuCACHE = CACHE ) then
+			if ( fblInMemory( inuPaiscodi) )
+			then
+				pkErrors.Pop;
+				return( TRUE );
+			end if;
+		end if;
+		LoadRecord( inuPaiscodi);
+		if ( rcJp_Pais.Paiscodi is null ) then
+			pkErrors.Pop;
+			return( FALSE );
+		end if;
+		pkErrors.Pop;
+		return( TRUE );
+	END fblExist;
+
+	FUNCTION frcGetRecord
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Pais%rowtype
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.frcGetRecord');
+		AccKey ( inuPaiscodi, inuCACHE);
+		pkErrors.Pop;
+		return ( rcJp_Pais );
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END frcGetRecord;
+
+	PROCEDURE UpdPaisnomb
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		isbPaisnomb$ in Jp_Pais.Paisnomb%type
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.UpdPaisnomb');
+		UPDATE Jp_Pais
+		SET
+			Paisnomb = isbPaisnomb$
+		WHERE  Paiscodi = inuPaiscodi;
+		if ( sql%notfound ) then
+			pkErrors.Pop;
+			raise NO_DATA_FOUND;
+		end if;
+		--Se limpia memoria
+		ClearMemory;
+		pkErrors.Pop;
+	EXCEPTION
+		when NO_DATA_FOUND then
+			Errors.setbsserror(cnuRECORD_NO_EXISTE,fsbGetMessageDescription(cnuRECORD_NO_EXISTE));
+			raise LOGIN_DENIED;
+	END UpdPaisnomb;
+
+	function fnuGetPaiscodi
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Pais.Paiscodi%type
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.fnuGetPaiscodi');
+		AccKey ( inuPaiscodi, inuCACHE );
+		pkErrors.Pop;
+		return ( rcJp_Pais.Paiscodi);
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END fnuGetPaiscodi;
+
+	function fsbGetPaisnomb
+	(
+		inuPaiscodi in Jp_Pais.Paiscodi%type,
+		inuCACHE in number default 1
+	)
+	RETURN Jp_Pais.Paisnomb%type
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Pais.fsbGetPaisnomb');
+		AccKey ( inuPaiscodi, inuCACHE );
+		pkErrors.Pop;
+		return ( rcJp_Pais.Paisnomb);
+	EXCEPTION
+		when LOGIN_DENIED then
+			pkErrors.Pop;
+			raise LOGIN_DENIED;
+	END fsbGetPaisnomb;
+
+end pktblJp_Pais;
+/

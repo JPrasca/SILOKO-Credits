@@ -1,0 +1,98 @@
+CREATE OR REPLACE PACKAGE DSCT_JPB_CONTRACT_TYPE
+IS 
+
+    /* Tipo de colección para memoria de múltiples registros*/
+	subtype styIndexKey is binary_integer;
+
+    type tytbMRDescription is table of CT_jpb_contract_type.Description%type index by styIndexKey;
+
+
+    /***** Metodos Publicos ****/
+
+    FUNCTION fsbVersion
+    RETURN varchar2;
+
+	PROCEDURE ClearMemory;
+
+
+    /*Método para obtener descripción con caché de multiples valores de Description*/
+    FUNCTION fsbGetMRDescription
+	(
+		
+		inuContract_Type_Id in CT_jpb_contract_type.Contract_Type_Id%type
+	)
+	RETURN CT_jpb_contract_type.Description%type;
+
+
+END DSCT_JPB_CONTRACT_TYPE;
+/
+CREATE OR REPLACE PACKAGE BODY DSCT_JPB_CONTRACT_TYPE
+IS
+
+   /* Constantes locales al paquete */
+
+	csbVersion CONSTANT VARCHAR2(20) := 'SAO414826';
+   /* Variables privadas */
+
+    /* Tabla global MultiRecord de Description */
+    gtbMRDescription tytbMRDescription;
+	/* Métodos privados */
+
+    FUNCTION fsbVersion
+    RETURN varchar2
+	IS
+	BEGIN
+		return csbVersion;
+	END;
+
+	PROCEDURE ClearMemory IS
+	BEGIN
+        gtbMRDescription.delete;
+	END ClearMemory;
+
+
+    PROCEDURE LoadMRDescription
+	(   
+		inuContract_Type_Id in CT_jpb_contract_type.Contract_Type_Id%type
+	)
+    IS
+        sbDescription   CT_jpb_contract_type.Description%type;
+        nuKey      styIndexKey;
+	BEGIN
+    	IF(DACT_jpb_contract_type.fblExist(inuContract_Type_Id))
+        then
+            sbDescription := DACT_jpb_contract_type.fsbGetDescription( inuContract_Type_Id );
+        ELSE
+            sbDescription := null;
+        END IF;
+        nuKey := inuContract_Type_Id;
+        gtbMRDescription(nuKey) := sbDescription;
+	EXCEPTION
+		when others then
+            raise;
+	END LoadMRDescription;
+
+    FUNCTION fsbGetMRDescription
+    (    
+		inuContract_Type_Id in CT_jpb_contract_type.Contract_Type_Id%type
+	)
+	RETURN CT_jpb_contract_type.Description%type
+    IS
+        nuKey      styIndexKey;
+	BEGIN
+        nuKey := inuContract_Type_Id;
+
+        if (replace(nuKey,'|') IS null) then
+            return null;
+        end if;
+
+        if (not gtbMRDescription.exists(nuKey)) then
+            LoadMRDescription(inuContract_Type_Id);
+        end if;
+		return (gtbMRDescription(nuKey));
+	EXCEPTION
+		when others then
+			raise;
+	END fsbGetMRDescription;
+END DSCT_JPB_CONTRACT_TYPE;
+/

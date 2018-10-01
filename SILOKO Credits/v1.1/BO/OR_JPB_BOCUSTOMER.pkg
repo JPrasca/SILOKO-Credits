@@ -1,0 +1,302 @@
+CREATE OR REPLACE PACKAGE OR_JPB_BOCustomer
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BOCustomer
+
+    Descripción   : Objeto de negocio relacionados a la información de los clientes SILOKO.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    02-05-2018    jprascaSAO414826
+    Creación
+    */
+    
+    
+	-- Declaracion de Tipos de datos publicos
+
+	-- Declaracion de variables publicas
+
+	-- Declaracion de metodos publicos
+	
+	/**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         fsbVersion
+    Descripción:    Obtiene la versión del paquete
+    ***********************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2;
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         GetCustomer
+    Descripción:    Obtiene lo datos de un cliente SILOKO
+    ***********************************************************************/
+    PROCEDURE GetCustomer
+    (
+        inuCustomerID       in  or_jpb_customer.customer_id%TYPE,
+        ocuDataCursor       out constants.tyRefCursor
+    );
+    
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         GetCustomers
+    Descripción:    Procedimiento público que obtiene los datos de varios clientes
+                    que cumplen con los criterios de búsqueda
+    *********************************************************************/
+    PROCEDURE GetCustomers
+    (
+        inuCustomerId       in  OR_jpb_customer.customer_id%TYPE,
+        isbCustomerDoc      in  or_jpb_customer.document%TYPE,
+        isbDescription      in  OR_jpb_customer.description%TYPE,
+        inuStratumId        in  or_jpb_customer.stratum_id%TYPE,
+        ocuDataCursor       out constants.tyRefCursor
+    );
+    
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         GetContractorContracts
+    Descripción:    Obtiene los datos de los contratos de un contratista
+    ***********************************************************************/
+    /*PROCEDURE GetContractorContracts
+    (
+        inuContractorId     in  ct_jpb_contract.contractor_id%type,
+        ocuDataCursor       out constants.tyRefCursor,
+        inuFlag             in  NUMBER default 0
+    );*/
+
+
+
+END OR_JPB_BOCustomer;
+/
+CREATE OR REPLACE PACKAGE BODY OR_JPB_BOCustomer
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BOCustomer
+
+    Descripción   : Objeto de negocio relacionados a la información de los clientes SILOKO..
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+
+    02-05-2018    jprascaSAO414826
+    Creación
+    */
+    
+    
+	-- Declaracion de variables y tipos globales privados del paquete
+    CSBVERSION                  CONSTANT VARCHAR2(10) := 'SAO414826';
+
+
+	-- Definicion de metodos publicos y privados del paquete
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : FSBVERSION
+
+    Descripción   : Función pública que se usa para obtener la versión del paquete
+
+    Parámetros    :
+
+    Retorno       : CSBVERSION - retorna la variable que contiene la versión
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    02-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2 IS
+    BEGIN
+        return CSBVERSION;
+    END FSBVERSION;
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : GetCustomer
+
+    Descripción   : Procedimiento público que obtiene los datos de un cliente SILOKO
+
+    Parámetros    : inuCustomerID   -   Identificador del cliente SILOKO
+                    ocuDataCursor   -   CURSOR que captura los datos
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    02-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE GetCustomer
+    (
+        inuCustomerID       in  or_jpb_customer.customer_id%TYPE,
+        ocuDataCursor       out constants.tyRefCursor
+    )
+    IS
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOCustomer.GetCustomer', 7);
+
+        -- Se realiza la consulta
+        OR_JPB_BCCustomer.GetCustomer
+        (
+            inuCustomerID,
+            ocuDataCursor
+        );
+
+        ut_trace.trace('Termina OR_JPB_BOCustomer.GetCustomer', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOCustomer.GetCustomer', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOCustomer.GetCustomer', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END GetCustomer;
+
+
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : GetCustomers
+
+    Descripción   : Procedimiento público que obtiene los datos de varios clientes
+                    que cumplen con los criterios de búsqueda
+
+    Parámetros    : inuCustomerId   -   Identificador del cliente
+                    isbCustomerDoc  -   Identificador del documento de identidad
+                    isbDescription  -   Nombre del cliente
+                    inuStratumIdo   -   Identificador del estrato
+                    ocuDataCursor   -   CURSOR que toma los datos
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    02-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE GetCustomers
+    (
+        inuCustomerId       in  OR_jpb_customer.customer_id%TYPE,
+        isbCustomerDoc      in  or_jpb_customer.document%TYPE,
+        isbDescription      in  OR_jpb_customer.description%TYPE,
+        inuStratumId        in  or_jpb_customer.stratum_id%TYPE,
+        ocuDataCursor       out constants.tyRefCursor
+    )
+    IS
+
+    BEGIN
+
+
+        ut_trace.trace('Inicia OR_JPB_BCCustomer.GetCustomers', 7);
+
+        or_jpb_bccustomer.GetCustomers
+        (
+            inuCustomerId,
+            UPPER(isbCustomerDoc),
+            UPPER(isbDescription),
+            inuStratumId,
+            ocuDataCursor
+        );
+
+        ut_trace.trace('Termina CT_JPB_BCCustomer.GetCustomers', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BCCustomer.GetCustomers', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BCCustomer.GetCustomers', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END GetCustomers;
+    
+    
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : GetContractorContracts
+
+    Descripción   : Método público que obtiene los contratos de un contratista
+
+    Parámetros    : inuContractorId     -   Identificador del conrtatista
+                    ocuDataCursor       -   CURSOR que captura los datos
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 20-04-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    20-04-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+   /* PROCEDURE GetContractorContracts
+    (
+        inuContractorId     in  ct_jpb_contract.contractor_id%type,
+        ocuDataCursor       out constants.tyRefCursor,
+        inuFlag             in  NUMBER default 0
+    )
+    IS
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOCustomer.GetContractor', 7);
+
+        -- Se realiza la consulta
+        ct_jpb_BCContract.GetContractorContracts
+        (
+            inuContractorId,
+            ocuDataCursor,
+            inuFlag
+        );
+
+        ut_trace.trace('Termina OR_JPB_BOCustomer.GetContractor', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOCustomer.GetContractor', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOCustomer.GetContractor', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END GetContractorContracts;
+    
+    */
+    
+
+END OR_JPB_BOCustomer;
+/

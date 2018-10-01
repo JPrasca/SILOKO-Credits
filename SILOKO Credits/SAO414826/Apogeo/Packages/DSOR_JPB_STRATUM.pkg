@@ -1,0 +1,98 @@
+CREATE OR REPLACE PACKAGE DSOR_JPB_STRATUM
+IS 
+
+    /* Tipo de colección para memoria de múltiples registros*/
+	subtype styIndexKey is binary_integer;
+
+    type tytbMRDescription is table of OR_jpb_stratum.Description%type index by styIndexKey;
+
+
+    /***** Metodos Publicos ****/
+
+    FUNCTION fsbVersion
+    RETURN varchar2;
+
+	PROCEDURE ClearMemory;
+
+
+    /*Método para obtener descripción con caché de multiples valores de Description*/
+    FUNCTION fsbGetMRDescription
+	(
+		
+		inuStratum_Id in OR_jpb_stratum.Stratum_Id%type
+	)
+	RETURN OR_jpb_stratum.Description%type;
+
+
+END DSOR_JPB_STRATUM;
+/
+CREATE OR REPLACE PACKAGE BODY DSOR_JPB_STRATUM
+IS
+
+   /* Constantes locales al paquete */
+
+	csbVersion CONSTANT VARCHAR2(20) := 'SAO414826';
+   /* Variables privadas */
+
+    /* Tabla global MultiRecord de Description */
+    gtbMRDescription tytbMRDescription;
+	/* Métodos privados */
+
+    FUNCTION fsbVersion
+    RETURN varchar2
+	IS
+	BEGIN
+		return csbVersion;
+	END;
+
+	PROCEDURE ClearMemory IS
+	BEGIN
+        gtbMRDescription.delete;
+	END ClearMemory;
+
+
+    PROCEDURE LoadMRDescription
+	(   
+		inuStratum_Id in OR_jpb_stratum.Stratum_Id%type
+	)
+    IS
+        sbDescription   OR_jpb_stratum.Description%type;
+        nuKey      styIndexKey;
+	BEGIN
+    	IF(DAOR_jpb_stratum.fblExist(inuStratum_Id))
+        then
+            sbDescription := DAOR_jpb_stratum.fsbGetDescription( inuStratum_Id );
+        ELSE
+            sbDescription := null;
+        END IF;
+        nuKey := inuStratum_Id;
+        gtbMRDescription(nuKey) := sbDescription;
+	EXCEPTION
+		when others then
+            raise;
+	END LoadMRDescription;
+
+    FUNCTION fsbGetMRDescription
+    (    
+		inuStratum_Id in OR_jpb_stratum.Stratum_Id%type
+	)
+	RETURN OR_jpb_stratum.Description%type
+    IS
+        nuKey      styIndexKey;
+	BEGIN
+        nuKey := inuStratum_Id;
+
+        if (replace(nuKey,'|') IS null) then
+            return null;
+        end if;
+
+        if (not gtbMRDescription.exists(nuKey)) then
+            LoadMRDescription(inuStratum_Id);
+        end if;
+		return (gtbMRDescription(nuKey));
+	EXCEPTION
+		when others then
+			raise;
+	END fsbGetMRDescription;
+END DSOR_JPB_STRATUM;
+/

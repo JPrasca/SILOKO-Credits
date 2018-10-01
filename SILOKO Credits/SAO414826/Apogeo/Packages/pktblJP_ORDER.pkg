@@ -1,0 +1,125 @@
+CREATE OR REPLACE PACKAGE pktblJp_Order
+is 
+
+
+	-- Define colecciones de cada columna de la tabla 
+	type tyOrden_Id is table of Jp_Order.Orden_Id%type index by binary_integer;
+	type tyOrden_D is table of Jp_Order.Orden_D%type index by binary_integer;
+
+    type tytbJp_Order is record
+	(
+        Orden_Id tyOrden_Id,
+        Orden_D tyOrden_D
+	);
+
+
+    ---------------
+    -- METHODS
+    ---------------
+
+    FUNCTION fsbVersion
+    RETURN varchar2;
+
+	function fsbGetMessageDescription
+	(
+		inuMenscodi	IN number
+	)
+	return varchar2;
+
+	PROCEDURE insRecord
+	(
+		ircRecord in Jp_Order%rowtype
+	);
+
+	PROCEDURE InsRecords
+	(
+		irctbRecord in out nocopy tytbJp_Order
+	);
+
+
+END pktblJp_Order;
+/
+CREATE OR REPLACE PACKAGE BODY pktblJp_Order
+IS
+
+   -----------------
+   -- CONSTANTES
+   -----------------
+	csbVersion constant varchar2(20) := 'SAO414826';
+	cbsTable      constant varchar2(30) := 'JP_ORDER'; -- Nombre tabla
+	cnuGeEntityId constant varchar2(30) := 9161; -- Id de Ge_entity
+	-------------------------
+	-- PRIVATE METHODS
+	-------------------------
+	function fsbGetMessageDescription
+	(
+		inuMenscodi	IN number
+	)
+	return varchar2
+	is 
+	      sbMessage varchar2(32000);
+	      sbTableDescription varchar2(32000);
+	BEGIN
+	    if (cnuGeEntityId > 0 and dage_entity.fblExist (cnuGeEntityId))  then
+	          sbTableDescription:= dage_entity.fsbGetDisplay_name(cnuGeEntityId);
+	    end if;
+
+		sbMessage := dage_message.fsbgetdescription(inuMenscodi);
+	    if sbTableDescription is null then
+	          sbMessage := replace(sbMessage,'%s1',cbsTable);
+	    else
+	          sbMessage := replace(sbMessage,'%s1','(' ||cbsTable||' - '||sbTableDescription ||')');
+	    end if;
+		return sbMessage ;
+	END fsbGetMessageDescription;
+
+    FUNCTION fsbVersion
+    RETURN varchar2
+	IS
+	BEGIN
+		return csbVersion;
+	END fsbVersion;
+
+	PROCEDURE insRecord
+	(
+		ircRecord in Jp_Order%rowtype
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Order.InsRecord');
+		INSERT INTO Jp_Order
+		(
+			Orden_Id,
+			Orden_D
+		)
+		VALUES
+		(
+			ircRecord.Orden_Id,
+			ircRecord.Orden_D
+		);
+		pkErrors.Pop;
+	END InsRecord;
+
+	PROCEDURE InsRecords
+	(
+		irctbRecord in out nocopy tytbJp_Order
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Order.InsRecords');
+		FORALL indx in irctbRecord.Orden_Id.first .. irctbRecord.Orden_Id.last
+		INSERT INTO Jp_Order
+		(
+			Orden_Id,
+			Orden_D
+		)
+		VALUES
+		(
+			irctbRecord.Orden_Id(indx),
+			irctbRecord.Orden_D(indx)
+		);
+		pkErrors.Pop;
+	END InsRecords;
+
+end pktblJp_Order;
+/

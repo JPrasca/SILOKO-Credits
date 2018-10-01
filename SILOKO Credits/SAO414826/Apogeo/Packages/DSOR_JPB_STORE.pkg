@@ -1,0 +1,98 @@
+CREATE OR REPLACE PACKAGE DSOR_JPB_STORE
+IS 
+
+    /* Tipo de colección para memoria de múltiples registros*/
+	subtype styIndexKey is VARCHAR2(17);
+
+    type tytbMRDescription is table of OR_jpb_store.Description%type index by styIndexKey;
+
+
+    /***** Metodos Publicos ****/
+
+    FUNCTION fsbVersion
+    RETURN varchar2;
+
+	PROCEDURE ClearMemory;
+
+
+    /*Método para obtener descripción con caché de multiples valores de Description*/
+    FUNCTION fsbGetMRDescription
+	(
+		
+		inuStore_Id in OR_jpb_store.Store_Id%type
+	)
+	RETURN OR_jpb_store.Description%type;
+
+
+END DSOR_JPB_STORE;
+/
+CREATE OR REPLACE PACKAGE BODY DSOR_JPB_STORE
+IS
+
+   /* Constantes locales al paquete */
+
+	csbVersion CONSTANT VARCHAR2(20) := 'SAO414826';
+   /* Variables privadas */
+
+    /* Tabla global MultiRecord de Description */
+    gtbMRDescription tytbMRDescription;
+	/* Métodos privados */
+
+    FUNCTION fsbVersion
+    RETURN varchar2
+	IS
+	BEGIN
+		return csbVersion;
+	END;
+
+	PROCEDURE ClearMemory IS
+	BEGIN
+        gtbMRDescription.delete;
+	END ClearMemory;
+
+
+    PROCEDURE LoadMRDescription
+	(   
+		inuStore_Id in OR_jpb_store.Store_Id%type
+	)
+    IS
+        sbDescription   OR_jpb_store.Description%type;
+        sbKey      styIndexKey;
+	BEGIN
+    	IF(DAOR_jpb_store.fblExist(inuStore_Id))
+        then
+            sbDescription := DAOR_jpb_store.fsbGetDescription( inuStore_Id );
+        ELSE
+            sbDescription := null;
+        END IF;
+        sbKey := inuStore_Id;
+        gtbMRDescription(sbKey) := sbDescription;
+	EXCEPTION
+		when others then
+            raise;
+	END LoadMRDescription;
+
+    FUNCTION fsbGetMRDescription
+    (    
+		inuStore_Id in OR_jpb_store.Store_Id%type
+	)
+	RETURN OR_jpb_store.Description%type
+    IS
+        sbKey      styIndexKey;
+	BEGIN
+        sbKey := inuStore_Id;
+
+        if (replace(sbKey,'|') IS null) then
+            return null;
+        end if;
+
+        if (not gtbMRDescription.exists(sbKey)) then
+            LoadMRDescription(inuStore_Id);
+        end if;
+		return (gtbMRDescription(sbKey));
+	EXCEPTION
+		when others then
+			raise;
+	END fsbGetMRDescription;
+END DSOR_JPB_STORE;
+/

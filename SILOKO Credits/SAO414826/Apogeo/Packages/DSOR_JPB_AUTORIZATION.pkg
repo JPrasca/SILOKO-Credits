@@ -1,0 +1,98 @@
+CREATE OR REPLACE PACKAGE DSOR_JPB_AUTORIZATION
+IS 
+
+    /* Tipo de colección para memoria de múltiples registros*/
+	subtype styIndexKey is VARCHAR2(17);
+
+    type tytbMRAutorization_Status is table of OR_jpb_autorization.Autorization_Status%type index by styIndexKey;
+
+
+    /***** Metodos Publicos ****/
+
+    FUNCTION fsbVersion
+    RETURN varchar2;
+
+	PROCEDURE ClearMemory;
+
+
+    /*Método para obtener descripción con caché de multiples valores de Autorization_Status*/
+    FUNCTION fsbGetMRAutorization_Status
+	(
+		
+		inuAutorization_Id in OR_jpb_autorization.Autorization_Id%type
+	)
+	RETURN OR_jpb_autorization.Autorization_Status%type;
+
+
+END DSOR_JPB_AUTORIZATION;
+/
+CREATE OR REPLACE PACKAGE BODY DSOR_JPB_AUTORIZATION
+IS
+
+   /* Constantes locales al paquete */
+
+	csbVersion CONSTANT VARCHAR2(20) := 'SAO414826';
+   /* Variables privadas */
+
+    /* Tabla global MultiRecord de Autorization_Status */
+    gtbMRAutorization_Status tytbMRAutorization_Status;
+	/* Métodos privados */
+
+    FUNCTION fsbVersion
+    RETURN varchar2
+	IS
+	BEGIN
+		return csbVersion;
+	END;
+
+	PROCEDURE ClearMemory IS
+	BEGIN
+        gtbMRAutorization_Status.delete;
+	END ClearMemory;
+
+
+    PROCEDURE LoadMRAutorization_Status
+	(   
+		inuAutorization_Id in OR_jpb_autorization.Autorization_Id%type
+	)
+    IS
+        sbAutorization_Status   OR_jpb_autorization.Autorization_Status%type;
+        sbKey      styIndexKey;
+	BEGIN
+    	IF(DAOR_jpb_autorization.fblExist(inuAutorization_Id))
+        then
+            sbAutorization_Status := DAOR_jpb_autorization.fsbGetAutorization_Status( inuAutorization_Id );
+        ELSE
+            sbAutorization_Status := null;
+        END IF;
+        sbKey := inuAutorization_Id;
+        gtbMRAutorization_Status(sbKey) := sbAutorization_Status;
+	EXCEPTION
+		when others then
+            raise;
+	END LoadMRAutorization_Status;
+
+    FUNCTION fsbGetMRAutorization_Status
+    (    
+		inuAutorization_Id in OR_jpb_autorization.Autorization_Id%type
+	)
+	RETURN OR_jpb_autorization.Autorization_Status%type
+    IS
+        sbKey      styIndexKey;
+	BEGIN
+        sbKey := inuAutorization_Id;
+
+        if (replace(sbKey,'|') IS null) then
+            return null;
+        end if;
+
+        if (not gtbMRAutorization_Status.exists(sbKey)) then
+            LoadMRAutorization_Status(inuAutorization_Id);
+        end if;
+		return (gtbMRAutorization_Status(sbKey));
+	EXCEPTION
+		when others then
+			raise;
+	END fsbGetMRAutorization_Status;
+END DSOR_JPB_AUTORIZATION;
+/

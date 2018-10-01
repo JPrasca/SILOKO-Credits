@@ -1,0 +1,131 @@
+CREATE OR REPLACE PACKAGE pktblJp_Parametr
+is 
+
+
+	-- Define colecciones de cada columna de la tabla 
+	type tyParaestr is table of Jp_Parametr.Paraestr%type index by binary_integer;
+	type tyParaplan is table of Jp_Parametr.Paraplan%type index by binary_integer;
+	type tyParapais is table of Jp_Parametr.Parapais%type index by binary_integer;
+
+    type tytbJp_Parametr is record
+	(
+        Paraestr tyParaestr,
+        Paraplan tyParaplan,
+        Parapais tyParapais
+	);
+
+
+    ---------------
+    -- METHODS
+    ---------------
+
+    FUNCTION fsbVersion
+    RETURN varchar2;
+
+	function fsbGetMessageDescription
+	(
+		inuMenscodi	IN number
+	)
+	return varchar2;
+
+	PROCEDURE insRecord
+	(
+		ircRecord in Jp_Parametr%rowtype
+	);
+
+	PROCEDURE InsRecords
+	(
+		irctbRecord in out nocopy tytbJp_Parametr
+	);
+
+
+END pktblJp_Parametr;
+/
+CREATE OR REPLACE PACKAGE BODY pktblJp_Parametr
+IS
+
+   -----------------
+   -- CONSTANTES
+   -----------------
+	csbVersion constant varchar2(20) := 'SAO414826';
+	cbsTable      constant varchar2(30) := 'JP_PARAMETR'; -- Nombre tabla
+	cnuGeEntityId constant varchar2(30) := 9255; -- Id de Ge_entity
+	-------------------------
+	-- PRIVATE METHODS
+	-------------------------
+	function fsbGetMessageDescription
+	(
+		inuMenscodi	IN number
+	)
+	return varchar2
+	is 
+	      sbMessage varchar2(32000);
+	      sbTableDescription varchar2(32000);
+	BEGIN
+	    if (cnuGeEntityId > 0 and dage_entity.fblExist (cnuGeEntityId))  then
+	          sbTableDescription:= dage_entity.fsbGetDisplay_name(cnuGeEntityId);
+	    end if;
+
+		sbMessage := dage_message.fsbgetdescription(inuMenscodi);
+	    if sbTableDescription is null then
+	          sbMessage := replace(sbMessage,'%s1',cbsTable);
+	    else
+	          sbMessage := replace(sbMessage,'%s1','(' ||cbsTable||' - '||sbTableDescription ||')');
+	    end if;
+		return sbMessage ;
+	END fsbGetMessageDescription;
+
+    FUNCTION fsbVersion
+    RETURN varchar2
+	IS
+	BEGIN
+		return csbVersion;
+	END fsbVersion;
+
+	PROCEDURE insRecord
+	(
+		ircRecord in Jp_Parametr%rowtype
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Parametr.InsRecord');
+		INSERT INTO Jp_Parametr
+		(
+			Paraestr,
+			Paraplan,
+			Parapais
+		)
+		VALUES
+		(
+			ircRecord.Paraestr,
+			ircRecord.Paraplan,
+			ircRecord.Parapais
+		);
+		pkErrors.Pop;
+	END InsRecord;
+
+	PROCEDURE InsRecords
+	(
+		irctbRecord in out nocopy tytbJp_Parametr
+	)
+	is
+	BEGIN
+		pkErrors.Push('pktblJp_Parametr.InsRecords');
+		FORALL indx in irctbRecord.Paraestr.first .. irctbRecord.Paraestr.last
+		INSERT INTO Jp_Parametr
+		(
+			Paraestr,
+			Paraplan,
+			Parapais
+		)
+		VALUES
+		(
+			irctbRecord.Paraestr(indx),
+			irctbRecord.Paraplan(indx),
+			irctbRecord.Parapais(indx)
+		);
+		pkErrors.Pop;
+	END InsRecords;
+
+end pktblJp_Parametr;
+/

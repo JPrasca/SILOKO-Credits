@@ -1,0 +1,318 @@
+CREATE OR REPLACE PACKAGE OR_UIJPPAT
+IS
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_UIJPPAT
+
+    Descripción   : Paquete que enlaza los objetos del negocio con la aplicación
+                    de Framework que asocia montos según criterios de asignación
+                    a varios estratos de una ciudad.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+
+    05-05-2018    jprascaSAO414826
+    Creación
+    */
+
+    --------------------------------------------
+    -- Constantes GLOBALES Y PUBLICAS DEL PAQUETE
+    --------------------------------------------
+
+
+    --------------------------------------------
+    -- Variables GLOBALES Y PUBLICAS DEL PAQUETE
+    --------------------------------------------
+    --------------------------------------------
+    -- Funciones y Procedimientos PUBLICAS DEL PAQUETE
+    --------------------------------------------
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2;
+    
+    /*****************************************************************
+    Propiedad intelectual de Open Systems (c).
+    Unidad      : process
+    Descripcion	: Obtiene los registros a Procesar
+    ******************************************************************/
+    PROCEDURE process
+    (
+        inuStratCityId      in  or_jpb_strat_by_city.strat_by_city_id%type,
+        inuCurrent          in  or_jpb_strat_by_city.strat_by_city_id%type,
+        inuTotal            in  or_jpb_strat_by_city.strat_by_city_id%type,
+        onuErrorCode        out nocopy ge_error_log.message_id%type,
+        osbErrorMess        out nocopy ge_error_log.description%type
+    );
+    
+    FUNCTION frfGetStratumCity
+    return constants.tyRefCursor;
+    
+    --PROCEDURE Init;
+
+
+END OR_UIJPPAT;
+/
+CREATE OR REPLACE PACKAGE BODY OR_UIJPPAT
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_UIJPPAT
+
+    Descripción   : Paquete que enlaza los objetos del negocio con la aplicación
+                    de Framework que asocia montos según criterios de asignación
+                    a varios estratos de una ciudad.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+
+    05-05-2018    jprascaSAO414826
+    Creación
+    */
+
+    --------------------------------------------
+    -- Constantes GLOBALES Y PUBLICAS DEL PAQUETE
+    --------------------------------------------
+    CSBVERSION                  CONSTANT VARCHAR2(10) := 'SAO440322';
+    gnuCount                    or_jpb_strat_by_city.strat_by_city_id%type;
+
+    --------------------------------------------
+    -- Variables GLOBALES Y PUBLICAS DEL PAQUETE
+    --------------------------------------------
+    --------------------------------------------
+    -- Funciones y Procedimientos PUBLICAS DEL PAQUETE
+    --------------------------------------------
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : FSBVERSION
+
+    Descripción   : Función pública que se usa para obtener la versión del paquete
+
+    Parámetros    :
+
+    Retorno       : CSBVERSION - retorna la variable que contiene la versión
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2 IS
+    BEGIN
+        RETURN CSBVERSION;
+    END FSBVERSION;
+    
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : frfGetStratumCity
+
+    Descripción   : Función pública que se usa para obtener los estratos de una
+                    ciudad
+
+    Parámetros    :
+
+    Retorno       : rfStratum - CURSOR que toma los valores para llevarlos a la
+                    GUI.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    FUNCTION frfGetStratumCity
+    return constants.tyRefCursor
+    IS
+        nuCityId               or_jpb_parameters.city_id%type;
+        rfStratum              constants.tyRefCursor;
+    BEGIN
+        nuCityId    :=  ut_convert.fnuChartoNumber
+                        (
+                            ge_boInstanceControl.fsbGetFieldValue
+                            (
+                                'OR_JPB_CITY',
+                                'CITY_ID'
+                            )
+                        );
+
+        ut_trace.trace('nuCity: '||nuCityId);
+        or_jpb_bostratumbycity.GetStratumCity(nuCityId, rfStratum);
+        
+        return rfStratum;
+    EXCEPTION
+        when ex.CONTROLLED_ERROR THEN
+            raise ex.CONTROLLED_ERROR;
+        when others THEN
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END frfGetStratumCity;
+    
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : process
+
+    Descripción   : Ejecuta la asignación respectiva para cada registro de estrato
+                    seleccionado en la GUI.
+
+    Parámetros    : inuStratCityId     - Identificador del registro de estrato en ciudad
+                    inuCurrent         - Registro de turno en el proceso
+                    inuTotal           - Total de registros procesados
+                    onuErrorCode       - Código de mensaje de error
+                    osbErrorMess       - Mensaje de error
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE process
+    (
+        inuStratCityId      in  or_jpb_strat_by_city.strat_by_city_id%type,
+        inuCurrent          in  or_jpb_strat_by_city.strat_by_city_id%type,
+        inuTotal            in  or_jpb_strat_by_city.strat_by_city_id%type,
+        onuErrorCode        out nocopy ge_error_log.message_id%type,
+        osbErrorMess        out nocopy ge_error_log.description%type
+    )
+    IS
+        nuCityId        or_jpb_parameters.city_id%type;
+        nuCatalogId      ge_entity_attributes.entity_attribute_id%type;
+        nuStratumId      or_jpb_parameters.stratum_id%type;
+        nuCountryId      or_jpb_parameters.country_id%type;
+        nuInfLimit       or_jpb_parameters.inf_limit%type;
+        nuSupLimit       OR_jpb_parameters.sup_limit%type;
+        nuActivePlan     or_jpb_parameters.active_products%type;
+        nuPlanType       or_jpb_parameters.plan_type_id%type;
+        nuAmount         OR_jpb_parameters.amount%type;
+        
+
+        nuInstance       ge_boInstanceControl.stynuIndex;
+        nuEntity         ge_Entity.entity_id%type;
+        --sbCityTId        ge_boutilities.styStatement;
+        --sbCountryID      ge_boutilities.styStatement;     --or_jpb_city1819
+    BEGIN
+
+        or_jpb_bostratumbycity.GetStratumAndCity(inuStratCityId, nuCityId, nuStratumId);
+
+        nuCountryId     :=  ut_convert.fnuchartonumber
+                            (
+                                ge_boinstancecontrol.fsbgetfieldvalue('OR_JPB_COUNTRY','COUNTRY_ID')
+                            );
+        nuInfLimit      :=  ut_convert.fnuchartonumber
+                            (
+                                ge_boinstancecontrol.fsbgetfieldvalue('OR_JPB_PARAMETERS','INF_LIMIT')
+                            );
+        nuSupLimit      :=  ut_convert.fnuchartonumber
+                            (
+                                ge_boinstancecontrol.fsbgetfieldvalue('OR_JPB_PARAMETERS','SUP_LIMIT')
+                            );
+        nuActivePlan    :=  ut_convert.fnuchartonumber
+                            (
+                                ge_boinstancecontrol.fsbgetfieldvalue('OR_JPB_PARAMETERS','ACTIVE_PRODUCTS')
+                            );
+        nuPlanType      :=  ut_convert.fnuchartonumber
+                            (
+                                ge_boinstancecontrol.fsbgetfieldvalue('OR_JPB_PARAMETERS','PLAN_TYPE_ID')
+                            );
+
+        nuAmount        :=  ut_convert.fnuchartonumber
+                            (
+                                ge_boinstancecontrol.fsbgetfieldvalue('OR_JPB_PARAMETERS','AMOUNT')
+                            );
+        /*IF nuContractTypeId IS null THEN
+            nuCatalogId := ge_bocatalog.fnuGetIdFromCatalog('CT_JPB_CONTRACT_TYPE@DESCRIPTION',ge_bocatalog.csbATTRIBUTE);
+            errors.seterror(116082, dage_entity_attributes.fsbGetDisplay_Name(nuCatalogId));
+            raise ex.CONTROLLED_ERROR;
+        END IF;  */
+        
+        IF inuCurrent = 1
+        THEN
+            or_jpb_boassignparameters.FillTbParameters(nuCityId);
+        END IF;
+
+        or_jpb_boassignparameters.RegistParamSet
+        (
+            nuCountryId,
+            nuCityId,
+            nuPlanType,
+            nuStratumId,
+            nuActivePlan,
+            nuSupLimit,
+            nuInfLimit,
+            nuAmount,
+            onuErrorCode,
+            osbErrorMess
+        );
+        COMMIT;
+        IF onuErrorCode IS not null THEN
+            gnuCount := 1;
+        END IF;
+        
+        IF inuCurrent = inuTotal THEN
+            IF gnuCount <> 1 THEN
+
+
+                IF (ge_boinstancecontrol.fblAcckeyInstanceStack('WORK_INSTANCE', nuInstance)) THEN
+                    null;
+                END IF;
+
+                ge_boInstanceControl.AddEntityStack
+                (
+                    nuInstance,
+                    'WORK_INSTANCE',
+                    null,
+                    'APPLICATION_PROPERTY',
+                    null,
+                    nuEntity
+                );
+                ge_boInstanceControl.AddAttribute
+                (
+                    'WORK_INSTANCE',
+                    null,
+                    'APPLICATION_PROPERTY',
+                    'CLOSE_IMMEDIATELY',
+                    'Y',
+                    TRUE
+                );
+            END IF;
+            gnuCount := 0;
+        END IF;
+        
+    EXCEPTION
+        when ex.CONTROLLED_ERROR THEN
+            raise ex.CONTROLLED_ERROR;
+        when others THEN
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END process;
+
+
+END OR_UIJPPAT;
+/

@@ -1,0 +1,1628 @@
+CREATE OR REPLACE PACKAGE DAOR_jpb_parameters
+is 
+	/* Cursor general para acceso por Llave Primaria */
+	CURSOR cuRecord 
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	)
+	IS
+		SELECT OR_jpb_parameters.*,OR_jpb_parameters.rowid
+		FROM OR_jpb_parameters
+		WHERE  Parameter_Id = inuParameter_Id;
+
+
+	/* Cursor general para acceso por RowId */
+	CURSOR cuRecordByRowId
+	(
+		irirowid in varchar2
+	)
+	IS
+        SELECT OR_jpb_parameters.*,OR_jpb_parameters.rowid
+		FROM OR_jpb_parameters
+		WHERE 
+			rowId = irirowid;
+
+
+	/* Subtipos */
+	subtype styOR_jpb_parameters  is  cuRecord%rowtype;
+	type    tyRefCursor is  REF CURSOR;
+
+	/*Tipos*/
+	type tytbOR_jpb_parameters is table of styOR_jpb_parameters index by binary_integer;
+	type tyrfRecords is ref cursor return styOR_jpb_parameters;
+
+	/* Tipos referenciando al registro */
+	type tytbParameter_Id is table of OR_jpb_parameters.Parameter_Id%type index by binary_integer;
+	type tytbStratum_Id is table of OR_jpb_parameters.Stratum_Id%type index by binary_integer;
+	type tytbCity_Id is table of OR_jpb_parameters.City_Id%type index by binary_integer;
+	type tytbCountry_Id is table of OR_jpb_parameters.Country_Id%type index by binary_integer;
+	type tytbPlan_Type_Id is table of OR_jpb_parameters.Plan_Type_Id%type index by binary_integer;
+	type tytbActive_Products is table of OR_jpb_parameters.Active_Products%type index by binary_integer;
+	type tytbInf_Limit is table of OR_jpb_parameters.Inf_Limit%type index by binary_integer;
+	type tytbSup_Limit is table of OR_jpb_parameters.Sup_Limit%type index by binary_integer;
+	type tytbAmount is table of OR_jpb_parameters.Amount%type index by binary_integer;
+	type tytbrowid is table of rowid index by binary_integer;
+
+	type tyrcOR_jpb_parameters is record
+	(
+		Parameter_Id   tytbParameter_Id,
+		Stratum_Id   tytbStratum_Id,
+		City_Id   tytbCity_Id,
+		Country_Id   tytbCountry_Id,
+		Plan_Type_Id   tytbPlan_Type_Id,
+		Active_Products   tytbActive_Products,
+		Inf_Limit   tytbInf_Limit,
+		Sup_Limit   tytbSup_Limit,
+		Amount   tytbAmount,
+		row_id tytbrowid
+	);
+
+
+	/***** Metodos Publicos ****/
+
+    FUNCTION fsbVersion
+    RETURN varchar2;
+
+	FUNCTION fsbGetMessageDescription
+	return varchar2;
+
+	PROCEDURE ClearMemory;
+
+	FUNCTION fblExist
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	)
+	RETURN boolean;
+
+	PROCEDURE AccKey
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	);
+
+	PROCEDURE AccKeyByRowId
+	(
+		iriRowID    in rowid
+	);
+
+	PROCEDURE ValDuplicate
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	);
+
+	PROCEDURE getRecord
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		orcRecord out nocopy styOR_jpb_parameters
+	);
+
+	FUNCTION frcGetRcData
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	)
+	RETURN styOR_jpb_parameters;
+
+	FUNCTION frcGetRcData
+	RETURN styOR_jpb_parameters;
+
+	FUNCTION frcGetRecord
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	)
+	RETURN styOR_jpb_parameters;
+
+	PROCEDURE getRecords 
+	(
+		isbQuery in varchar2,
+		otbResult out nocopy tytbOR_jpb_parameters
+	);
+
+	FUNCTION frfGetRecords
+	(
+		isbCriteria in varchar2 default null,
+		iblLock in boolean default false
+	)
+	RETURN tyRefCursor;
+
+	PROCEDURE insRecord
+	(
+		ircOR_jpb_parameters in styOR_jpb_parameters
+	);
+
+	PROCEDURE insRecord
+	(
+		ircOR_jpb_parameters in styOR_jpb_parameters,
+        orirowid   out varchar2
+	);
+
+	PROCEDURE insRecords
+	(
+		iotbOR_jpb_parameters in out nocopy tytbOR_jpb_parameters
+	);
+
+	PROCEDURE delRecord
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuLock in number default 1
+	);
+
+	PROCEDURE delByRowID
+	(
+		iriRowID    in rowid,
+		inuLock in number default 1
+	);
+
+	PROCEDURE delRecords
+	(
+		iotbOR_jpb_parameters in out nocopy tytbOR_jpb_parameters,
+		inuLock in number default 1
+	);
+
+	PROCEDURE updRecord
+	(
+		ircOR_jpb_parameters in styOR_jpb_parameters,
+		inuLock in number default 0
+	);
+
+	PROCEDURE updRecords
+	(
+		iotbOR_jpb_parameters in out nocopy tytbOR_jpb_parameters,
+		inuLock in number default 1
+	);
+
+	PROCEDURE updStratum_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuStratum_Id$ in OR_jpb_parameters.Stratum_Id%type,
+		inuLock in number default 0
+	);
+
+	PROCEDURE updCity_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuCity_Id$ in OR_jpb_parameters.City_Id%type,
+		inuLock in number default 0
+	);
+
+	PROCEDURE updCountry_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuCountry_Id$ in OR_jpb_parameters.Country_Id%type,
+		inuLock in number default 0
+	);
+
+	PROCEDURE updPlan_Type_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuPlan_Type_Id$ in OR_jpb_parameters.Plan_Type_Id%type,
+		inuLock in number default 0
+	);
+
+	PROCEDURE updActive_Products
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuActive_Products$ in OR_jpb_parameters.Active_Products%type,
+		inuLock in number default 0
+	);
+
+	PROCEDURE updInf_Limit
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuInf_Limit$ in OR_jpb_parameters.Inf_Limit%type,
+		inuLock in number default 0
+	);
+
+	PROCEDURE updSup_Limit
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuSup_Limit$ in OR_jpb_parameters.Sup_Limit%type,
+		inuLock in number default 0
+	);
+
+	PROCEDURE updAmount
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuAmount$ in OR_jpb_parameters.Amount%type,
+		inuLock in number default 0
+	);
+
+	FUNCTION fnuGetParameter_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Parameter_Id%type;
+
+	FUNCTION fnuGetStratum_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Stratum_Id%type;
+
+	FUNCTION fnuGetCity_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.City_Id%type;
+
+	FUNCTION fnuGetCountry_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Country_Id%type;
+
+	FUNCTION fnuGetPlan_Type_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Plan_Type_Id%type;
+
+	FUNCTION fnuGetActive_Products
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Active_Products%type;
+
+	FUNCTION fnuGetInf_Limit
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Inf_Limit%type;
+
+	FUNCTION fnuGetSup_Limit
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Sup_Limit%type;
+
+	FUNCTION fnuGetAmount
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Amount%type;
+
+	PROCEDURE LockByPk
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		orcOR_jpb_parameters  out styOR_jpb_parameters
+	);
+
+	PROCEDURE LockByRowID
+	(
+		irirowid    in  varchar2,
+		orcOR_jpb_parameters  out styOR_jpb_parameters
+	);
+
+	PROCEDURE SetUseCache
+	(
+		iblUseCache    in  boolean
+	);
+END DAOR_jpb_parameters;
+/
+CREATE OR REPLACE PACKAGE BODY DAOR_jpb_parameters
+IS
+
+    /*constantes locales al paquete*/
+    cnuRECORD_NOT_EXIST constant number(1) := 1;
+    cnuRECORD_ALREADY_EXIST constant number(1) := 2;
+    cnuAPPTABLEBUSSY constant number(4) := 6951;
+    cnuINS_PK_NULL constant number(4):= 1682;
+    cnuRECORD_HAVE_CHILDREN constant number(4):= -2292;
+    csbVersion   CONSTANT VARCHAR2(20) := 'SAO414826';
+    csbTABLEPARAMETER   CONSTANT VARCHAR2(30) := 'OR_JPB_PARAMETERS';
+	 cnuGeEntityId constant varchar2(30) := 10118; -- Id de Ge_entity
+
+	/* Cursor para bloqueo de un registro por llave primaria */
+	CURSOR cuLockRcByPk 
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	)
+	IS
+		SELECT OR_jpb_parameters.*,OR_jpb_parameters.rowid 
+		FROM OR_jpb_parameters
+		WHERE  Parameter_Id = inuParameter_Id
+		FOR UPDATE NOWAIT;
+
+	/* Cursor para bloqueo de un registro por rowid */
+	CURSOR cuLockRcbyRowId 
+	(
+		irirowid in varchar2
+	)
+	IS
+		SELECT OR_jpb_parameters.*,OR_jpb_parameters.rowid 
+		FROM OR_jpb_parameters
+		WHERE 
+			rowId = irirowid
+		FOR UPDATE NOWAIT;
+
+
+	/*Tipos*/
+	type tyrfOR_jpb_parameters is ref cursor;
+
+	/*Variables Globales*/
+	rcRecOfTab tyrcOR_jpb_parameters;
+
+	rcData cuRecord%rowtype;
+
+    blDAO_USE_CACHE    boolean := null;
+
+
+	/* Metodos privados */
+	FUNCTION fsbGetMessageDescription
+	return varchar2
+	is 
+	      sbTableDescription varchar2(32000);
+	BEGIN
+	    if (cnuGeEntityId > 0 and dage_entity.fblExist (cnuGeEntityId))  then
+	          sbTableDescription:= dage_entity.fsbGetDisplay_name(cnuGeEntityId);
+	    else
+	          sbTableDescription:= csbTABLEPARAMETER;
+	    end if;
+
+		return sbTableDescription ;
+	END;
+	PROCEDURE GetDAO_USE_CACHE
+	IS
+	BEGIN
+	    if ( blDAO_USE_CACHE is null ) then
+	        blDAO_USE_CACHE :=  ge_boparameter.fsbget('DAO_USE_CACHE') = 'Y';
+	    end if;
+	END;
+	FUNCTION fsbPrimaryKey( rcI in styOR_jpb_parameters default rcData )
+	return varchar2
+	IS
+		sbPk varchar2(500);
+	BEGIN
+		sbPk:='[';
+		sbPk:=sbPk||ut_convert.fsbToChar(rcI.Parameter_Id);
+		sbPk:=sbPk||']';
+		return sbPk;
+	END;
+	PROCEDURE LockByPk
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		orcOR_jpb_parameters  out styOR_jpb_parameters
+	)
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id:=inuParameter_Id;
+
+		Open cuLockRcByPk(inuParameter_Id);
+
+		fetch cuLockRcByPk into orcOR_jpb_parameters;
+		if cuLockRcByPk%notfound  then
+			close cuLockRcByPk;
+			raise no_data_found;
+		end if;
+		close cuLockRcByPk ;
+	EXCEPTION
+		when no_data_found then
+			if cuLockRcByPk%isopen then
+				close cuLockRcByPk;
+			end if;
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '|| fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+		when ex.RESOURCE_BUSY THEN
+			if cuLockRcByPk%isopen then
+				close cuLockRcByPk;
+			end if;
+			errors.setError(cnuAPPTABLEBUSSY,fsbPrimaryKey(rcError)||'|'|| fsbGetMessageDescription );
+			raise ex.controlled_error;
+		when others then
+			if cuLockRcByPk%isopen then
+				close cuLockRcByPk;
+			end if;
+			raise;
+	END;
+	PROCEDURE LockByRowID
+	(
+		irirowid    in  varchar2,
+		orcOR_jpb_parameters  out styOR_jpb_parameters
+	)
+	IS
+	BEGIN
+		Open cuLockRcbyRowId
+		(
+			irirowid
+		);
+
+		fetch cuLockRcbyRowId into orcOR_jpb_parameters;
+		if cuLockRcbyRowId%notfound  then
+			close cuLockRcbyRowId;
+			raise no_data_found;
+		end if;
+		close cuLockRcbyRowId;
+	EXCEPTION
+		when no_data_found then
+			if cuLockRcbyRowId%isopen then
+				close cuLockRcbyRowId;
+			end if;
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' rowid=['||iriRowID||']');
+			raise ex.CONTROLLED_ERROR;
+		when ex.RESOURCE_BUSY THEN
+			if cuLockRcbyRowId%isopen then
+				close cuLockRcbyRowId;
+			end if;
+			errors.setError(cnuAPPTABLEBUSSY,'rowid=['||irirowid||']|'||fsbGetMessageDescription );
+			raise ex.controlled_error;
+		when others then
+			if cuLockRcbyRowId%isopen then
+				close cuLockRcbyRowId;
+			end if;
+			raise;
+	END;
+	PROCEDURE DelRecordOfTables
+	(
+		itbOR_jpb_parameters  in out nocopy tytbOR_jpb_parameters
+	)
+	IS
+	BEGIN
+			rcRecOfTab.Parameter_Id.delete;
+			rcRecOfTab.Stratum_Id.delete;
+			rcRecOfTab.City_Id.delete;
+			rcRecOfTab.Country_Id.delete;
+			rcRecOfTab.Plan_Type_Id.delete;
+			rcRecOfTab.Active_Products.delete;
+			rcRecOfTab.Inf_Limit.delete;
+			rcRecOfTab.Sup_Limit.delete;
+			rcRecOfTab.Amount.delete;
+			rcRecOfTab.row_id.delete;
+	END;
+	PROCEDURE FillRecordOfTables
+	(
+		itbOR_jpb_parameters  in out nocopy tytbOR_jpb_parameters,
+		oblUseRowId out boolean
+	)
+	IS
+	BEGIN
+		DelRecordOfTables(itbOR_jpb_parameters);
+
+		for n in itbOR_jpb_parameters.first .. itbOR_jpb_parameters.last loop
+			rcRecOfTab.Parameter_Id(n) := itbOR_jpb_parameters(n).Parameter_Id;
+			rcRecOfTab.Stratum_Id(n) := itbOR_jpb_parameters(n).Stratum_Id;
+			rcRecOfTab.City_Id(n) := itbOR_jpb_parameters(n).City_Id;
+			rcRecOfTab.Country_Id(n) := itbOR_jpb_parameters(n).Country_Id;
+			rcRecOfTab.Plan_Type_Id(n) := itbOR_jpb_parameters(n).Plan_Type_Id;
+			rcRecOfTab.Active_Products(n) := itbOR_jpb_parameters(n).Active_Products;
+			rcRecOfTab.Inf_Limit(n) := itbOR_jpb_parameters(n).Inf_Limit;
+			rcRecOfTab.Sup_Limit(n) := itbOR_jpb_parameters(n).Sup_Limit;
+			rcRecOfTab.Amount(n) := itbOR_jpb_parameters(n).Amount;
+			rcRecOfTab.row_id(n) := itbOR_jpb_parameters(n).rowid;
+
+			-- Indica si el rowid es Nulo
+			oblUseRowId:=rcRecOfTab.row_id(n) is NOT NULL;
+		end loop;
+	END;
+
+	PROCEDURE Load
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	)
+	IS
+		rcRecordNull cuRecord%rowtype;
+	BEGIN
+		if cuRecord%isopen then
+			close cuRecord;
+		end if;
+		open cuRecord(inuParameter_Id);
+
+		fetch cuRecord into rcData;
+		if cuRecord%notfound  then
+			close cuRecord;
+			rcData := rcRecordNull;
+			raise no_data_found;
+		end if;
+		close cuRecord;
+	END;
+	PROCEDURE LoadByRowId
+	(
+		irirowid in varchar2
+	)
+	IS
+		rcRecordNull cuRecordByRowId%rowtype;
+	BEGIN
+		if cuRecordByRowId%isopen then
+			close cuRecordByRowId;
+		end if;
+		open cuRecordByRowId(irirowid);
+
+		fetch cuRecordByRowId into rcData;
+		if cuRecordByRowId%notfound  then
+			close cuRecordByRowId;
+			rcData := rcRecordNull;
+			raise no_data_found;
+		end if;
+		close cuRecordByRowId;
+	END;
+	FUNCTION fblAlreadyLoaded
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	)
+	RETURN boolean
+	IS
+	BEGIN
+		if (
+			inuParameter_Id = rcData.Parameter_Id
+		   ) then
+			return ( true );
+		end if;
+		return (false);
+	END;
+
+	/***** Fin metodos privados *****/
+
+	/***** Metodos publicos ******/
+    FUNCTION fsbVersion
+    RETURN varchar2
+	IS
+	BEGIN
+		return csbVersion;
+	END;
+
+	PROCEDURE ClearMemory
+	IS
+		rcRecordNull cuRecord%rowtype;
+	BEGIN
+		rcData := rcRecordNull;
+	END;
+	FUNCTION fblExist
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	)
+	RETURN boolean
+	IS
+	BEGIN
+		Load(inuParameter_Id);
+		return(TRUE);
+	EXCEPTION
+		when no_data_found then
+			return(FALSE);
+	END;
+	PROCEDURE AccKey
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	)
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id:=inuParameter_Id;
+
+		Load(inuParameter_Id);
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE AccKeyByRowId
+	(
+		iriRowID    in rowid
+	)
+	IS
+	BEGIN
+		LoadByRowId(iriRowID);
+	EXCEPTION
+		when no_data_found then
+            Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' rowid=['||iriRowID||']');
+            raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE ValDuplicate
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	)
+	IS
+	BEGIN
+		Load(inuParameter_Id);
+		Errors.setError(cnuRECORD_ALREADY_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey);
+		raise ex.CONTROLLED_ERROR;
+
+	EXCEPTION
+		when no_data_found then
+			null;
+	END;
+	PROCEDURE getRecord
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		orcRecord out nocopy styOR_jpb_parameters
+	)
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id:=inuParameter_Id;
+
+		Load(inuParameter_Id);
+		orcRecord := rcData;
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '|| fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	FUNCTION frcGetRecord
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	)
+	RETURN styOR_jpb_parameters
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id:=inuParameter_Id;
+
+		Load(inuParameter_Id);
+		return(rcData);
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '|| fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	FUNCTION frcGetRcData
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type
+	)
+	RETURN styOR_jpb_parameters
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id:=inuParameter_Id;
+        -- si usa cache y esta cargado retorna
+		if  blDAO_USE_CACHE AND fblAlreadyLoaded(inuParameter_Id) then
+			 return(rcData);
+		end if;
+		Load(inuParameter_Id);
+		return(rcData);
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '|| fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	FUNCTION frcGetRcData
+	RETURN styOR_jpb_parameters
+	IS
+	BEGIN
+		return(rcData);
+	END;
+	PROCEDURE getRecords
+	(
+		isbQuery in varchar2,
+		otbResult out nocopy tytbOR_jpb_parameters
+	)
+	IS
+		rfOR_jpb_parameters tyrfOR_jpb_parameters;
+		n number(4) := 1;
+		sbFullQuery VARCHAR2 (32000) := 'SELECT OR_jpb_parameters.*, OR_jpb_parameters.rowid FROM OR_jpb_parameters';
+		nuMaxTbRecords number(5):=ge_boparameter.fnuget('MAXREGSQUERY');
+	BEGIN
+		otbResult.delete;
+		if isbQuery is not NULL and length(isbQuery) > 0 then
+			sbFullQuery := sbFullQuery||' WHERE '||isbQuery;
+		end if;
+
+		open rfOR_jpb_parameters for sbFullQuery;
+
+		fetch rfOR_jpb_parameters bulk collect INTO otbResult;
+
+		close rfOR_jpb_parameters;
+		if otbResult.count = 0  then
+			raise no_data_found;
+		end if;
+
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription);
+			raise ex.CONTROLLED_ERROR;
+	END;
+	FUNCTION frfGetRecords
+	(
+		isbCriteria in varchar2 default null,
+		iblLock in boolean default false
+	)
+	RETURN tyRefCursor
+	IS
+		rfQuery tyRefCursor;
+		sbSQL VARCHAR2 (32000) := 'select OR_jpb_parameters.*, OR_jpb_parameters.rowid FROM OR_jpb_parameters';
+	BEGIN
+		if isbCriteria is not null then
+			sbSQL := sbSQL||' where '||isbCriteria;
+		end if;
+		if iblLock then
+			sbSQL := sbSQL||' for update nowait';
+		end if;
+		open rfQuery for sbSQL;
+		return(rfQuery);
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription);
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE insRecord
+	(
+		ircOR_jpb_parameters in styOR_jpb_parameters
+	)
+	IS
+		rirowid varchar2(200);
+	BEGIN
+		insRecord(ircOR_jpb_parameters,rirowid);
+	END;
+	PROCEDURE insRecord
+	(
+		ircOR_jpb_parameters in styOR_jpb_parameters,
+        orirowid   out varchar2
+	)
+	IS
+	BEGIN
+		if ircOR_jpb_parameters.Parameter_Id is NULL then
+			Errors.SetError(cnuINS_PK_NULL,
+			                fsbGetMessageDescription||'|Parameter_Id');
+			raise ex.controlled_error;
+		end if;
+
+		insert into OR_jpb_parameters
+		(
+			Parameter_Id,
+			Stratum_Id,
+			City_Id,
+			Country_Id,
+			Plan_Type_Id,
+			Active_Products,
+			Inf_Limit,
+			Sup_Limit,
+			Amount
+		)
+		values
+		(
+			ircOR_jpb_parameters.Parameter_Id,
+			ircOR_jpb_parameters.Stratum_Id,
+			ircOR_jpb_parameters.City_Id,
+			ircOR_jpb_parameters.Country_Id,
+			ircOR_jpb_parameters.Plan_Type_Id,
+			ircOR_jpb_parameters.Active_Products,
+			ircOR_jpb_parameters.Inf_Limit,
+			ircOR_jpb_parameters.Sup_Limit,
+			ircOR_jpb_parameters.Amount
+		)
+            returning
+			rowid
+		into
+			orirowid;
+		ClearMemory;
+	EXCEPTION
+		when dup_val_on_index then
+			Errors.setError(cnuRECORD_ALREADY_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(ircOR_jpb_parameters));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE insRecords
+	(
+		iotbOR_jpb_parameters in out nocopy tytbOR_jpb_parameters
+	)
+	IS
+		blUseRowID boolean;
+	BEGIN
+		FillRecordOfTables(iotbOR_jpb_parameters,blUseRowID);
+		forall n in iotbOR_jpb_parameters.first..iotbOR_jpb_parameters.last
+			insert into OR_jpb_parameters
+			(
+				Parameter_Id,
+				Stratum_Id,
+				City_Id,
+				Country_Id,
+				Plan_Type_Id,
+				Active_Products,
+				Inf_Limit,
+				Sup_Limit,
+				Amount
+			)
+			values
+			(
+				rcRecOfTab.Parameter_Id(n),
+				rcRecOfTab.Stratum_Id(n),
+				rcRecOfTab.City_Id(n),
+				rcRecOfTab.Country_Id(n),
+				rcRecOfTab.Plan_Type_Id(n),
+				rcRecOfTab.Active_Products(n),
+				rcRecOfTab.Inf_Limit(n),
+				rcRecOfTab.Sup_Limit(n),
+				rcRecOfTab.Amount(n)
+			);
+		ClearMemory;
+	EXCEPTION
+		when dup_val_on_index then
+			Errors.setError(cnuRECORD_ALREADY_EXIST,fsbGetMessageDescription);
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE delRecord
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuLock in number default 1
+	)
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id := inuParameter_Id;
+
+		if inuLock=1 then
+			LockByPk
+			(
+				inuParameter_Id,
+				rcData
+			);
+		end if;
+
+
+		delete
+		from OR_jpb_parameters
+		where
+       		Parameter_Id=inuParameter_Id;
+            if sql%notfound then
+                raise no_data_found;
+            end if;
+		ClearMemory;
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+         raise ex.CONTROLLED_ERROR;
+		when ex.RECORD_HAVE_CHILDREN then
+			Errors.setError(cnuRECORD_HAVE_CHILDREN,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE delByRowID
+	(
+		iriRowID    in rowid,
+		inuLock in number default 1
+	)
+	IS
+		rcRecordNull cuRecord%rowtype;
+		rcError  styOR_jpb_parameters;
+	BEGIN
+		if inuLock=1 then
+			LockByRowId(iriRowID,rcData);
+		end if;
+
+
+		delete
+		from OR_jpb_parameters
+		where
+			rowid = iriRowID
+		returning
+			Parameter_Id
+		into
+			rcError.Parameter_Id;
+            if sql%notfound then
+			 raise no_data_found;
+		    end if;
+            if rcData.rowID=iriRowID then
+			 rcData := rcRecordNull;
+		    end if;
+		ClearMemory;
+	EXCEPTION
+		when no_data_found then
+            Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' rowid=['||iriRowID||']');
+            raise ex.CONTROLLED_ERROR;
+		when ex.RECORD_HAVE_CHILDREN then
+            Errors.setError(cnuRECORD_HAVE_CHILDREN,fsbGetMessageDescription||' '||' rowid=['||iriRowID||']');
+            raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE delRecords
+	(
+		iotbOR_jpb_parameters in out nocopy tytbOR_jpb_parameters,
+		inuLock in number default 1
+	)
+	IS
+		blUseRowID boolean;
+		rcAux styOR_jpb_parameters;
+	BEGIN
+		FillRecordOfTables(iotbOR_jpb_parameters, blUseRowID);
+        if ( blUseRowId ) then
+			if inuLock = 1 then
+				for n in iotbOR_jpb_parameters.first .. iotbOR_jpb_parameters.last loop
+					LockByRowId
+					(
+						rcRecOfTab.row_id(n),
+						rcAux
+					);
+				end loop;
+			end if;
+
+			forall n in iotbOR_jpb_parameters.first .. iotbOR_jpb_parameters.last
+				delete
+				from OR_jpb_parameters
+				where
+					rowid = rcRecOfTab.row_id(n);
+		else
+			if inuLock = 1 then
+				for n in iotbOR_jpb_parameters.first .. iotbOR_jpb_parameters.last loop
+					LockByPk
+					(
+						rcRecOfTab.Parameter_Id(n),
+						rcAux
+					);
+				end loop;
+			end if;
+
+			forall n in iotbOR_jpb_parameters.first .. iotbOR_jpb_parameters.last
+				delete
+				from OR_jpb_parameters
+				where
+		         	Parameter_Id = rcRecOfTab.Parameter_Id(n);
+		end if;
+		ClearMemory;
+	EXCEPTION
+            when ex.RECORD_HAVE_CHILDREN then
+                  Errors.setError(cnuRECORD_HAVE_CHILDREN,fsbGetMessageDescription);
+                  raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE updRecord
+	(
+		ircOR_jpb_parameters in styOR_jpb_parameters,
+		inuLock in number default 0
+	)
+	IS
+		nuParameter_Id	OR_jpb_parameters.Parameter_Id%type;
+	BEGIN
+		if ircOR_jpb_parameters.rowid is not null then
+			if inuLock=1 then
+				LockByRowId(ircOR_jpb_parameters.rowid,rcData);
+			end if;
+			update OR_jpb_parameters
+			set
+				Stratum_Id = ircOR_jpb_parameters.Stratum_Id,
+				City_Id = ircOR_jpb_parameters.City_Id,
+				Country_Id = ircOR_jpb_parameters.Country_Id,
+				Plan_Type_Id = ircOR_jpb_parameters.Plan_Type_Id,
+				Active_Products = ircOR_jpb_parameters.Active_Products,
+				Inf_Limit = ircOR_jpb_parameters.Inf_Limit,
+				Sup_Limit = ircOR_jpb_parameters.Sup_Limit,
+				Amount = ircOR_jpb_parameters.Amount
+			where
+				rowid = ircOR_jpb_parameters.rowid
+			returning
+				Parameter_Id
+			into
+				nuParameter_Id;
+		else
+			if inuLock=1 then
+				LockByPk
+				(
+					ircOR_jpb_parameters.Parameter_Id,
+					rcData
+				);
+			end if;
+
+			update OR_jpb_parameters
+			set
+				Stratum_Id = ircOR_jpb_parameters.Stratum_Id,
+				City_Id = ircOR_jpb_parameters.City_Id,
+				Country_Id = ircOR_jpb_parameters.Country_Id,
+				Plan_Type_Id = ircOR_jpb_parameters.Plan_Type_Id,
+				Active_Products = ircOR_jpb_parameters.Active_Products,
+				Inf_Limit = ircOR_jpb_parameters.Inf_Limit,
+				Sup_Limit = ircOR_jpb_parameters.Sup_Limit,
+				Amount = ircOR_jpb_parameters.Amount
+			where
+				Parameter_Id = ircOR_jpb_parameters.Parameter_Id
+			returning
+				Parameter_Id
+			into
+				nuParameter_Id;
+		end if;
+		if
+			nuParameter_Id is NULL
+		then
+			raise no_data_found;
+		end if;
+		ClearMemory;
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||fsbPrimaryKey(ircOR_jpb_parameters));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE updRecords
+	(
+		iotbOR_jpb_parameters in out nocopy tytbOR_jpb_parameters,
+		inuLock in number default 1
+	)
+	IS
+		blUseRowID boolean;    
+		rcAux styOR_jpb_parameters;
+	BEGIN
+		FillRecordOfTables(iotbOR_jpb_parameters,blUseRowID);
+		if blUseRowID then
+			if inuLock = 1 then
+				for n in iotbOR_jpb_parameters.first .. iotbOR_jpb_parameters.last loop
+					LockByRowId
+					(
+						rcRecOfTab.row_id(n),
+						rcAux
+					);
+				end loop;
+			end if;
+
+			forall n in iotbOR_jpb_parameters.first .. iotbOR_jpb_parameters.last
+				update OR_jpb_parameters
+				set
+					Stratum_Id = rcRecOfTab.Stratum_Id(n),
+					City_Id = rcRecOfTab.City_Id(n),
+					Country_Id = rcRecOfTab.Country_Id(n),
+					Plan_Type_Id = rcRecOfTab.Plan_Type_Id(n),
+					Active_Products = rcRecOfTab.Active_Products(n),
+					Inf_Limit = rcRecOfTab.Inf_Limit(n),
+					Sup_Limit = rcRecOfTab.Sup_Limit(n),
+					Amount = rcRecOfTab.Amount(n)
+				where
+					rowid =  rcRecOfTab.row_id(n);
+		else
+			if inuLock = 1 then
+				for n in iotbOR_jpb_parameters.first .. iotbOR_jpb_parameters.last loop
+					LockByPk
+					(
+						rcRecOfTab.Parameter_Id(n),
+						rcAux
+					);
+				end loop;
+			end if;
+
+			forall n in iotbOR_jpb_parameters.first .. iotbOR_jpb_parameters.last
+				update OR_jpb_parameters
+				SET
+					Stratum_Id = rcRecOfTab.Stratum_Id(n),
+					City_Id = rcRecOfTab.City_Id(n),
+					Country_Id = rcRecOfTab.Country_Id(n),
+					Plan_Type_Id = rcRecOfTab.Plan_Type_Id(n),
+					Active_Products = rcRecOfTab.Active_Products(n),
+					Inf_Limit = rcRecOfTab.Inf_Limit(n),
+					Sup_Limit = rcRecOfTab.Sup_Limit(n),
+					Amount = rcRecOfTab.Amount(n)
+				where
+					Parameter_Id = rcRecOfTab.Parameter_Id(n)
+;
+		end if;
+		ClearMemory;
+	END;
+	PROCEDURE updStratum_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuStratum_Id$ in OR_jpb_parameters.Stratum_Id%type,
+		inuLock in number default 0
+	)
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id := inuParameter_Id;
+		if inuLock=1 then
+			LockByPk
+			(
+				inuParameter_Id,
+				rcData
+			);
+		end if;
+
+		update OR_jpb_parameters
+		set
+			Stratum_Id = inuStratum_Id$
+		where
+			Parameter_Id = inuParameter_Id;
+
+		if sql%notfound then
+			raise no_data_found;
+		end if;
+
+		rcData.Stratum_Id:= inuStratum_Id$;
+		ClearMemory;
+
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE updCity_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuCity_Id$ in OR_jpb_parameters.City_Id%type,
+		inuLock in number default 0
+	)
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id := inuParameter_Id;
+		if inuLock=1 then
+			LockByPk
+			(
+				inuParameter_Id,
+				rcData
+			);
+		end if;
+
+		update OR_jpb_parameters
+		set
+			City_Id = inuCity_Id$
+		where
+			Parameter_Id = inuParameter_Id;
+
+		if sql%notfound then
+			raise no_data_found;
+		end if;
+
+		rcData.City_Id:= inuCity_Id$;
+		ClearMemory;
+
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE updCountry_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuCountry_Id$ in OR_jpb_parameters.Country_Id%type,
+		inuLock in number default 0
+	)
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id := inuParameter_Id;
+		if inuLock=1 then
+			LockByPk
+			(
+				inuParameter_Id,
+				rcData
+			);
+		end if;
+
+		update OR_jpb_parameters
+		set
+			Country_Id = inuCountry_Id$
+		where
+			Parameter_Id = inuParameter_Id;
+
+		if sql%notfound then
+			raise no_data_found;
+		end if;
+
+		rcData.Country_Id:= inuCountry_Id$;
+		ClearMemory;
+
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE updPlan_Type_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuPlan_Type_Id$ in OR_jpb_parameters.Plan_Type_Id%type,
+		inuLock in number default 0
+	)
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id := inuParameter_Id;
+		if inuLock=1 then
+			LockByPk
+			(
+				inuParameter_Id,
+				rcData
+			);
+		end if;
+
+		update OR_jpb_parameters
+		set
+			Plan_Type_Id = inuPlan_Type_Id$
+		where
+			Parameter_Id = inuParameter_Id;
+
+		if sql%notfound then
+			raise no_data_found;
+		end if;
+
+		rcData.Plan_Type_Id:= inuPlan_Type_Id$;
+		ClearMemory;
+
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE updActive_Products
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuActive_Products$ in OR_jpb_parameters.Active_Products%type,
+		inuLock in number default 0
+	)
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id := inuParameter_Id;
+		if inuLock=1 then
+			LockByPk
+			(
+				inuParameter_Id,
+				rcData
+			);
+		end if;
+
+		update OR_jpb_parameters
+		set
+			Active_Products = inuActive_Products$
+		where
+			Parameter_Id = inuParameter_Id;
+
+		if sql%notfound then
+			raise no_data_found;
+		end if;
+
+		rcData.Active_Products:= inuActive_Products$;
+		ClearMemory;
+
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE updInf_Limit
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuInf_Limit$ in OR_jpb_parameters.Inf_Limit%type,
+		inuLock in number default 0
+	)
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id := inuParameter_Id;
+		if inuLock=1 then
+			LockByPk
+			(
+				inuParameter_Id,
+				rcData
+			);
+		end if;
+
+		update OR_jpb_parameters
+		set
+			Inf_Limit = inuInf_Limit$
+		where
+			Parameter_Id = inuParameter_Id;
+
+		if sql%notfound then
+			raise no_data_found;
+		end if;
+
+		rcData.Inf_Limit:= inuInf_Limit$;
+		ClearMemory;
+
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE updSup_Limit
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuSup_Limit$ in OR_jpb_parameters.Sup_Limit%type,
+		inuLock in number default 0
+	)
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id := inuParameter_Id;
+		if inuLock=1 then
+			LockByPk
+			(
+				inuParameter_Id,
+				rcData
+			);
+		end if;
+
+		update OR_jpb_parameters
+		set
+			Sup_Limit = inuSup_Limit$
+		where
+			Parameter_Id = inuParameter_Id;
+
+		if sql%notfound then
+			raise no_data_found;
+		end if;
+
+		rcData.Sup_Limit:= inuSup_Limit$;
+		ClearMemory;
+
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	PROCEDURE updAmount
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuAmount$ in OR_jpb_parameters.Amount%type,
+		inuLock in number default 0
+	)
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+		rcError.Parameter_Id := inuParameter_Id;
+		if inuLock=1 then
+			LockByPk
+			(
+				inuParameter_Id,
+				rcData
+			);
+		end if;
+
+		update OR_jpb_parameters
+		set
+			Amount = inuAmount$
+		where
+			Parameter_Id = inuParameter_Id;
+
+		if sql%notfound then
+			raise no_data_found;
+		end if;
+
+		rcData.Amount:= inuAmount$;
+		ClearMemory;
+
+	EXCEPTION
+		when no_data_found then
+			Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+			raise ex.CONTROLLED_ERROR;
+	END;
+	FUNCTION fnuGetParameter_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Parameter_Id%type
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+
+		rcError.Parameter_Id := inuParameter_Id;
+
+        -- si usa cache y esta cargado retorna
+		if  blDAO_USE_CACHE AND fblAlreadyLoaded(inuParameter_Id) then
+			 return(rcData.Parameter_Id);
+		end if;
+		Load(inuParameter_Id);
+		return(rcData.Parameter_Id);
+	EXCEPTION
+		when no_data_found then
+			if inuRaiseError = 1 then
+				Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+				raise ex.CONTROLLED_ERROR;
+			else
+				return null;
+			end if;
+	END;
+	FUNCTION fnuGetStratum_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Stratum_Id%type
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+
+		rcError.Parameter_Id := inuParameter_Id;
+
+        -- si usa cache y esta cargado retorna
+		if  blDAO_USE_CACHE AND fblAlreadyLoaded(inuParameter_Id) then
+			 return(rcData.Stratum_Id);
+		end if;
+		Load(inuParameter_Id);
+		return(rcData.Stratum_Id);
+	EXCEPTION
+		when no_data_found then
+			if inuRaiseError = 1 then
+				Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+				raise ex.CONTROLLED_ERROR;
+			else
+				return null;
+			end if;
+	END;
+	FUNCTION fnuGetCity_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.City_Id%type
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+
+		rcError.Parameter_Id := inuParameter_Id;
+
+        -- si usa cache y esta cargado retorna
+		if  blDAO_USE_CACHE AND fblAlreadyLoaded(inuParameter_Id) then
+			 return(rcData.City_Id);
+		end if;
+		Load(inuParameter_Id);
+		return(rcData.City_Id);
+	EXCEPTION
+		when no_data_found then
+			if inuRaiseError = 1 then
+				Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+				raise ex.CONTROLLED_ERROR;
+			else
+				return null;
+			end if;
+	END;
+	FUNCTION fnuGetCountry_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Country_Id%type
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+
+		rcError.Parameter_Id := inuParameter_Id;
+
+        -- si usa cache y esta cargado retorna
+		if  blDAO_USE_CACHE AND fblAlreadyLoaded(inuParameter_Id) then
+			 return(rcData.Country_Id);
+		end if;
+		Load(inuParameter_Id);
+		return(rcData.Country_Id);
+	EXCEPTION
+		when no_data_found then
+			if inuRaiseError = 1 then
+				Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+				raise ex.CONTROLLED_ERROR;
+			else
+				return null;
+			end if;
+	END;
+	FUNCTION fnuGetPlan_Type_Id
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Plan_Type_Id%type
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+
+		rcError.Parameter_Id := inuParameter_Id;
+
+        -- si usa cache y esta cargado retorna
+		if  blDAO_USE_CACHE AND fblAlreadyLoaded(inuParameter_Id) then
+			 return(rcData.Plan_Type_Id);
+		end if;
+		Load(inuParameter_Id);
+		return(rcData.Plan_Type_Id);
+	EXCEPTION
+		when no_data_found then
+			if inuRaiseError = 1 then
+				Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+				raise ex.CONTROLLED_ERROR;
+			else
+				return null;
+			end if;
+	END;
+	FUNCTION fnuGetActive_Products
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Active_Products%type
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+
+		rcError.Parameter_Id := inuParameter_Id;
+
+        -- si usa cache y esta cargado retorna
+		if  blDAO_USE_CACHE AND fblAlreadyLoaded(inuParameter_Id) then
+			 return(rcData.Active_Products);
+		end if;
+		Load(inuParameter_Id);
+		return(rcData.Active_Products);
+	EXCEPTION
+		when no_data_found then
+			if inuRaiseError = 1 then
+				Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+				raise ex.CONTROLLED_ERROR;
+			else
+				return null;
+			end if;
+	END;
+	FUNCTION fnuGetInf_Limit
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Inf_Limit%type
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+
+		rcError.Parameter_Id := inuParameter_Id;
+
+        -- si usa cache y esta cargado retorna
+		if  blDAO_USE_CACHE AND fblAlreadyLoaded(inuParameter_Id) then
+			 return(rcData.Inf_Limit);
+		end if;
+		Load(inuParameter_Id);
+		return(rcData.Inf_Limit);
+	EXCEPTION
+		when no_data_found then
+			if inuRaiseError = 1 then
+				Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+				raise ex.CONTROLLED_ERROR;
+			else
+				return null;
+			end if;
+	END;
+	FUNCTION fnuGetSup_Limit
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Sup_Limit%type
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+
+		rcError.Parameter_Id := inuParameter_Id;
+
+        -- si usa cache y esta cargado retorna
+		if  blDAO_USE_CACHE AND fblAlreadyLoaded(inuParameter_Id) then
+			 return(rcData.Sup_Limit);
+		end if;
+		Load(inuParameter_Id);
+		return(rcData.Sup_Limit);
+	EXCEPTION
+		when no_data_found then
+			if inuRaiseError = 1 then
+				Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+				raise ex.CONTROLLED_ERROR;
+			else
+				return null;
+			end if;
+	END;
+	FUNCTION fnuGetAmount
+	(
+		inuParameter_Id in OR_jpb_parameters.Parameter_Id%type,
+		inuRaiseError in number default 1
+	)
+	RETURN OR_jpb_parameters.Amount%type
+	IS
+		rcError styOR_jpb_parameters;
+	BEGIN
+
+		rcError.Parameter_Id := inuParameter_Id;
+
+        -- si usa cache y esta cargado retorna
+		if  blDAO_USE_CACHE AND fblAlreadyLoaded(inuParameter_Id) then
+			 return(rcData.Amount);
+		end if;
+		Load(inuParameter_Id);
+		return(rcData.Amount);
+	EXCEPTION
+		when no_data_found then
+			if inuRaiseError = 1 then
+				Errors.setError(cnuRECORD_NOT_EXIST,fsbGetMessageDescription||' '||fsbPrimaryKey(rcError));
+				raise ex.CONTROLLED_ERROR;
+			else
+				return null;
+			end if;
+	END;
+	PROCEDURE SetUseCache
+	(
+		iblUseCache    in  boolean
+	) IS
+	Begin
+	    blDAO_USE_CACHE := iblUseCache;
+	END;
+
+begin
+    GetDAO_USE_CACHE;
+end DAOR_jpb_parameters;
+/
