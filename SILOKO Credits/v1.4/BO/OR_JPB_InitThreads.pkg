@@ -1,0 +1,131 @@
+CREATE OR REPLACE PACKAGE OR_JPB_InitThreads
+IS
+
+
+	-- Declaracion de Tipos de datos publicos
+
+	-- Declaracion de variables publicas
+	
+    csbJPPRO        sa_executable.name%type := 'JPPRO0516';
+
+    /* cantidad de registros de la tabla de clientes durante la granularidad*/
+    PROCEDURE Init;
+    
+    PROCEDURE GoEstaPRO
+    (
+        isbStatus   IN estaprog.esprprog%TYPE,
+        inuProcess  IN estaprog.esprsufa%TYPE default 0
+    );
+END OR_JPB_InitThreads;
+/
+
+CREATE OR REPLACE PACKAGE BODY OR_JPB_InitThreads
+IS
+	-- Declaracion de variables y tipos globales privados del paquete
+
+        --csbJPPRO        sa_executable.name%type := 'JPPRO0516';
+        sbParameters    varchar2(20000) := '';
+        sbConnection    varchar2(300);
+        nuThreads       number := 4;
+
+        sbUser          varchar2(100);
+        sbPassword      varchar2(100);
+        sbInstance      varchar2(100);
+        
+	-- Definicion de metodos publicos y privados del paquete
+	
+
+    PROCEDURE Init
+    IS
+        nuErrorCode NUMBER;
+        sbErrorMessage VARCHAR2(4000);
+
+
+    BEGIN                         -- ge_module
+        errors.Initialize;
+        ut_trace.Init;
+        ut_trace.SetOutPut(ut_trace.cnuTRACE_DBMS_OUTPUT);
+        ut_trace.SetLevel(0);
+        ut_trace.Trace('INICIO');
+
+        -- Obtiene la información requerida para la cadena de conexión
+    --    GE_BODatabaseconnection.GetConnectionString(sbUser, sbPassword, sbInstance);
+
+        sbUser := 'open';
+        sbPassword := 'demeik';
+        sbInstance := 'SFBM0708';
+
+        -- Concatena la cadena de conexión
+        sbConnection := sbUser || '/' || sbPassword || '@' || sbInstance;
+
+        dbms_output.put_Line(sbConnection);
+
+        -- Invoca ejecución en paralelo
+        GE_BOParallelExec.ExecParallelProc
+        (
+            csbJPPRO,  -- Proceso
+            sbParameters, -- Parámetros de ejecución
+            sbConnection, -- Conexión
+            nuThreads,    -- Cantidad de hilos
+            'or_jpb_bocustomer.CountRegisters',   -- Método para obtener la cantidad de registros
+            'OR_JPB_BOAssignedQuota.AllAssignQuota',-- Método de procesamiento de datos
+            ge_boparallelexec.csbBEHAVIOR_FREE -- Modo de ejecucion libre
+        );
+
+        dbms_output.put_line('SALIDA onuErrorCode: '||nuErrorCode);
+        dbms_output.put_line('SALIDA osbErrorMess: '||sbErrorMessage);
+
+
+    EXCEPTION
+        when ex.CONTROLLED_ERROR  then
+            Errors.getError(nuErrorCode, sbErrorMessage);
+            dbms_output.put_line('ERROR CONTROLLED ');
+            dbms_output.put_line('error onuErrorCode: '||nuErrorCode);
+            dbms_output.put_line('error osbErrorMess: '||sbErrorMessage);
+
+        when OTHERS then
+            Errors.setError;
+            Errors.getError(nuErrorCode, sbErrorMessage);
+            dbms_output.put_line('ERROR OTHERS ');
+            dbms_output.put_line('error onuErrorCode: '||nuErrorCode);
+            dbms_output.put_line('error osbErrorMess: '||sbErrorMessage);
+    END Init;
+    
+
+
+    PROCEDURE GoEstaPRO(isbStatus IN estaprog.esprprog%TYPE, inuProcess IN estaprog.esprsufa%TYPE default 0)
+    IS
+        sbProcess estaprog.esprprog%TYPE := '';
+
+        nuErrorCode NUMBER;
+        sbErrorMessage VARCHAR2(4000);
+    BEGIN
+    
+       --dbms_output.put_Line('...');
+        --se va a buscar el proceso a ver si existe en la tabla
+        --SELECT estaprog.esprprog INTO sbProcess FROM estaprog WHERE estaprog.esprprog = 'JPPRO0516';
+
+        --dbms_output.put_Line('...'||sbProceso);
+
+        -- si existe, se borra
+        DELETE FROM estaprog WHERE estaprog.esprprog = isbStatus;
+        COMMIT;
+
+
+        -- se escribe de nuevo
+        pkstatusexeprogrammgr.addrecordidsession(
+                isbStatus,
+                inuProcess
+        );
+        EXCEPTION
+            WHEN OTHERS THEN
+                nuErrorCode     := SQLCODE;
+                sbErrorMessage  := SQlERRM;
+                Errors.setError;
+                Errors.getError(nuErrorCode, sbErrorMessage);
+                dbms_output.put_Line('Error en BC (Iniciar estado-proceso)');
+                dbms_output.put_line('error onuErrorCode: '||nuErrorCode);
+                dbms_output.put_line('error osbErrorMess: '||sbErrorMessage);
+    END GoEstaPRO;
+END OR_JPB_InitThreads;
+/

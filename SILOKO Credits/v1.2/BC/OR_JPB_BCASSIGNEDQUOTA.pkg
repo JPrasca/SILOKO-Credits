@@ -1,0 +1,249 @@
+CREATE OR REPLACE PACKAGE OR_JPB_BCAssignedQuota
+IS
+/*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BCAssignedQuota
+
+    Descripción   : Componente de negocio relacionados a los cupos asignados
+                    a clientes SILOKO.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+
+    02-05-2018    jprascaSAO414826
+    Creación
+*/
+
+
+	-- Declaracion de Tipos de datos publicos
+
+	-- Declaracion de variables publicas
+
+	-- Declaracion de metodos publicos
+	
+ /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         FSBVERSION
+    Descripción:    Obtiene la versión del paquete
+    ***********************************************************************/
+    FUNCTION FSBVERSION
+    RETURN  VARCHAR2;
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         AssignSingleQuota
+    Descripción:    Asigna un cupo manualmente a un cliente SILOKO
+    ***********************************************************************/
+    PROCEDURE AssignSingleQuota
+    (
+        inuCustomerId    IN     or_jpb_assigned_quota.customer_id%TYPE,
+        inuAssigned      IN     or_jpb_assigned_quota.assigned%TYPE,
+        inuSuccess       OUT    ge_message.message_id%TYPE
+    );
+    
+    PROCEDURE AssignQuotaWithParam
+    (
+        inuCustomerId       IN  OR_jpb_customer.customer_id%type,
+        inuPlanId           IN  or_jpb_parameters.plan_type_id%type,
+        inuCityId           IN  or_jpb_parameters.city_id%type
+
+    );
+    
+
+END OR_JPB_BCAssignedQuota;
+/
+CREATE OR REPLACE PACKAGE BODY OR_JPB_BCAssignedQuota
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BCAssignedQuota
+
+    Descripción   : Componente de negocio relacionados a la información de los cupos asociados a clientes SILOKO.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+    
+    
+    02-05-2018    jprascaSAO414826
+    Creación
+    */
+
+	-- Declaracion de variables y tipos globales privados del paquete
+    CSBVERSION                  CONSTANT VARCHAR2(10) := or_jpb_constants_val.csbVersion;
+    cnuDomainYesNot             CONSTANT ge_domain_values.domain_values_id%type := or_jpb_constants_val.cnuDomainYesNot;
+
+
+	-- Definicion de metodos publicos y privados del paquete
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : FSBVERSION
+
+    Descripción   : Función pública que se usa para obtener la versión del paquete
+
+    Parámetros    :
+
+    Retorno       : CSBVERSION - retorna la variable que contiene la versión
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    02-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2 IS
+    BEGIN
+        return CSBVERSION;
+    END FSBVERSION;
+
+
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : AssignSingleQuota
+
+    Descripción   : Método público que se usa para asignar un cupo a un cliente
+                    (que no tiene cupo asigando) ignorando los criterios de
+                    asignación (manualmente).
+
+    Parámetros    : inuCustomerId   -   Identificador del cliente SILOKO
+                    inuAssigned     -   Monto a asignar en el cupo
+
+    Retorno       :
+    
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+
+    PROCEDURE AssignSingleQuota
+    (
+        inuCustomerId    IN     or_jpb_assigned_quota.customer_id%TYPE,
+        inuAssigned      IN     or_jpb_assigned_quota.assigned%TYPE,
+        inuSuccess       OUT    ge_message.message_id%TYPE
+    )
+    IS
+        nuFindCustomer  OR_jpb_assigned_quota.customer_id%TYPE;
+        --rcQuota         daor_jpb_assigned_quota.styOR_jpb_assigned_quota;
+    BEGIN
+    
+        ut_trace.trace('Inicia OR_JPB_BCAssignedQuota.AssignSingleQuota', 7);
+        nuFindCustomer := 0;
+        
+        /* Verificando que el cliente no se encuentre entre los que ya tiene cupo asignado*/
+        SELECT
+            COUNT(1)
+        INTO
+            nuFindCustomer
+        FROM
+            OR_JPB_ASSIGNED_QUOTA
+        WHERE
+            OR_JPB_ASSIGNED_QUOTA.customer_id = inuCustomerId;
+
+
+        /*
+        Dependiendo del resultado anterior, entonces se procede a realizar la respectiva
+        acción y también a modificar el mensaje que se mostrará en la aplicación
+        */
+
+        IF nuFindCustomer = 0
+        THEN
+
+            --rcQuota.quota_id    :=  seq.getnext('SEQ_OR_JPB_ASSIGNED_QUO_372769');
+            --rcQuota.assigned    :=  inuAssigned;
+            --rcQuota.available   :=  inuAssigned;
+            --rcQuota.is_enabled  :=  or_jpb_constants_val.csbYES;
+
+            inuSuccess := or_jpb_constants_val.cnuVErrorCode(1); -- se ha registrado con éxito
+            
+            INSERT INTO OR_JPB_ASSIGNED_QUOTA
+            (
+                OR_JPB_ASSIGNED_QUOTA.quota_id,
+                OR_JPB_ASSIGNED_QUOTA.customer_id,
+                OR_JPB_ASSIGNED_QUOTA.assigned,
+                OR_JPB_ASSIGNED_QUOTA.available,
+                OR_JPB_ASSIGNED_QUOTA.is_enabled
+            )
+            VALUES
+            (
+                seq.getnext('SEQ_OR_JPB_ASSIGNED_QUO_372769'),
+                inuCustomerId,
+                inuAssigned,
+                inuAssigned,
+                or_jpb_constants_val.csbYES
+            );
+            --daor_jpb_assigned_quota.insRecord(rcQuota);
+        ELSE
+            inuSuccess := or_jpb_constants_val.cnuVErrorCode(2); -- ya tiene cupo asignado
+        END IF;
+        
+        ut_trace.trace('Inicia OR_JPB_BCAssignedQuota.AssignSingleQuota', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BCAssignedQuota.AssignSingleQuota', 7);
+            raise ex.CONTROLLED_ERROR;
+            
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BCAssignedQuota.AssignSingleQuota', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END AssignSingleQuota;
+
+
+    PROCEDURE AssignQuotaWithParam
+    (
+        inuCustomerId       IN  OR_jpb_customer.customer_id%type,
+        inuPlanId           IN  or_jpb_parameters.plan_type_id%type,
+        inuCityId           IN  or_jpb_parameters.city_id%type
+
+    )
+    IS
+        rcCustomer   daor_jpb_customer.styOR_jpb_customer;
+        rcPlan       daor_jpb_plan.styOR_jpb_plan;
+        rcCity       daor_jpb_city.styOR_jpb_city;
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BCAssignedQuota.AssignQuotaWithParam', 7);
+
+        rcCustomer :=  daor_jpb_customer.frcGetRecord(inuCustomerId);
+        rcPlan     :=  daor_jpb_plan.frcGetRecord(inuPlanId);
+        rcCity     :=  daor_jpb_city.frcGetRecord(inuCityId);
+         
+
+        
+        ut_trace.trace('Termina OR_JPB_BCAssignedQuota.AssignQuotaWithParam', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BCAssignedQuota.AssignQuotaWithParam', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BCAssignedQuota.AssignQuotaWithParam', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END AssignQuotaWithParam;
+    
+END OR_JPB_BCAssignedQuota;
+/

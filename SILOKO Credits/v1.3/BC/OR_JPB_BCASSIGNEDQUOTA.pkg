@@ -1,0 +1,375 @@
+CREATE OR REPLACE PACKAGE OR_JPB_BCAssignedQuota
+IS
+/*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BCAssignedQuota
+
+    Descripción   : Componente de negocio relacionados a los cupos asignados
+                    a clientes SILOKO.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+
+    02-05-2018    jprascaSAO414826
+    Creación
+*/
+
+
+	-- Declaracion de Tipos de datos publicos
+
+	-- Declaracion de variables publicas
+
+	-- Declaracion de metodos publicos
+	
+ /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         FSBVERSION
+    Descripción:    Obtiene la versión del paquete
+    ***********************************************************************/
+    FUNCTION FSBVERSION
+    RETURN  VARCHAR2;
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems                      OR_jpb_credit
+    Nombre:         AssignSingleQuota
+    Descripción:    Asigna un cupo manualmente a un cliente SILOKO
+    ***********************************************************************/
+    PROCEDURE AssignSingleQuota
+    (
+        inuCustomerId    IN     or_jpb_assigned_quota.customer_id%TYPE,
+        inuAssigned      IN     or_jpb_assigned_quota.assigned%TYPE
+    );
+    
+    
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         AssignQuotaWithParam
+    Descripción:    Asigna un cupo a un cliente SILOKO segín
+    ***********************************************************************/
+    PROCEDURE AssignQuotaWithParam
+    (
+        inuCustomerId       IN  OR_jpb_customer.customer_id%type,
+        inuPlanId           IN  or_jpb_tariff.plan_type_id%type
+
+    );
+    
+    
+    PROCEDURE CountCustomerQuota
+    (
+        inuCustomerId    IN     OR_jpb_assigned_quota.customer_id%TYPE,
+        onuFindCustomer  OUT    OR_jpb_assigned_quota.customer_id%TYPE
+    );
+
+    PROCEDURE IniciarEstaPRO
+    (
+        sbEstado estaprog.esprprog%TYPE,
+        nuProcesos estaprog.esprsufa%TYPE
+    );
+END OR_JPB_BCAssignedQuota;
+/
+CREATE OR REPLACE PACKAGE BODY OR_JPB_BCAssignedQuota
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BCAssignedQuota
+
+    Descripción   : Componente de negocio relacionados a la información de los cupos asociados a clientes SILOKO.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+    
+    
+    02-05-2018    jprascaSAO414826
+    Creación
+    */
+
+	-- Declaracion de variables y tipos globales privados del paquete
+    CSBVERSION                  CONSTANT VARCHAR2(10) := or_jpb_constants_val.csbVersion;
+    cnuDomainYesNot             CONSTANT ge_domain_values.domain_values_id%type := or_jpb_constants_val.cnuDomainYesNot;
+
+
+	-- Definicion de metodos publicos y privados del paquete
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : FSBVERSION
+
+    Descripción   : Función pública que se usa para obtener la versión del paquete
+
+    Parámetros    :
+
+    Retorno       : CSBVERSION - retorna la variable que contiene la versión
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    02-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2 IS
+    BEGIN
+        return CSBVERSION;
+    END FSBVERSION;
+
+
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : AssignSingleQuota
+
+    Descripción   : Método público que se usa para asignar un cupo a un cliente
+                    (que no tiene cupo asigando) ignorando los criterios de
+                    asignación (manualmente).
+
+    Parámetros    : inuCustomerId   -   Identificador del cliente SILOKO
+                    inuAssigned     -   Monto a asignar en el cupo
+
+    Retorno       :
+    
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+
+    PROCEDURE AssignSingleQuota
+    (
+        inuCustomerId    IN     or_jpb_assigned_quota.customer_id%TYPE,
+        inuAssigned      IN     or_jpb_assigned_quota.assigned%TYPE
+    )
+    IS
+
+    BEGIN
+    
+        ut_trace.trace('Inicia OR_JPB_BCAssignedQuota.AssignSingleQuota', 7);
+
+        INSERT INTO OR_JPB_ASSIGNED_QUOTA
+        (
+            OR_JPB_ASSIGNED_QUOTA.quota_id,
+            OR_JPB_ASSIGNED_QUOTA.customer_id,
+            OR_JPB_ASSIGNED_QUOTA.assigned,
+            OR_JPB_ASSIGNED_QUOTA.available,
+            OR_JPB_ASSIGNED_QUOTA.is_enabled
+        )
+        VALUES
+        (
+            seq.getnext('SEQ_OR_JPB_ASSIGNED_QUO_372769'),
+            inuCustomerId,
+            inuAssigned,
+            inuAssigned,
+            or_jpb_constants_val.csbYES
+        );
+
+        
+        ut_trace.trace('Inicia OR_JPB_BCAssignedQuota.AssignSingleQuota', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BCAssignedQuota.AssignSingleQuota', 7);
+            raise ex.CONTROLLED_ERROR;
+            
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BCAssignedQuota.AssignSingleQuota', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END AssignSingleQuota;
+
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : AssignQuotaWithParam
+
+    Descripción   : Método público que se usa para asignar un cupo a un cliente
+                    (que no tiene cupo asigando) teniendo en cuenta los criterios de
+                    asignación.
+
+    Parámetros    : inuCustomerId   -   Identificador del cliente SILOKO
+                    inuAssigned     -   Monto a asignar en el cupo
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE AssignQuotaWithParam
+    (
+        inuCustomerId       IN  OR_jpb_customer.customer_id%type,
+        inuPlanId           IN  or_jpb_tariff.plan_type_id%type
+
+    )
+    IS
+        rcCustomer   daor_jpb_customer.styOR_jpb_customer;
+        rcPlan       daor_jpb_plan.styOR_jpb_plan;
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BCAssignedQuota.AssignQuotaWithParam', 7);
+
+        rcCustomer :=  daor_jpb_customer.frcGetRecord(inuCustomerId);
+        rcPlan     :=  daor_jpb_plan.frcGetRecord(inuPlanId);
+
+        null;
+        
+        ut_trace.trace('Termina OR_JPB_BCAssignedQuota.AssignQuotaWithParam', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BCAssignedQuota.AssignQuotaWithParam', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BCAssignedQuota.AssignQuotaWithParam', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END AssignQuotaWithParam;
+
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : AssignSingleQuota
+
+    Descripción   : Método público que se usa para asignar un cupo a un cliente
+                    (que no tiene cupo asigando) ignorando los criterios de
+                    asignación (manualmente).
+
+    Parámetros    : inuCustomerId   -   Identificador del cliente SILOKO
+                    inuAssigned     -   Monto a asignar en el cupo
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+
+    PROCEDURE CountCustomerQuota
+    (
+        inuCustomerId    IN     OR_jpb_assigned_quota.customer_id%TYPE,
+        onuFindCustomer  OUT    OR_jpb_assigned_quota.customer_id%TYPE
+    )
+    IS
+    BEGIN
+
+        ut_trace.trace('Inicia OR_JPB_BCAssignedQuota.CountCustomerQuota', 7);
+        onuFindCustomer := 0;
+
+        /* Verificando que el cliente no se encuentre entre los que ya tiene cupo asignado*/
+        SELECT
+            COUNT(1)
+        INTO
+            onuFindCustomer
+        FROM
+            OR_JPB_ASSIGNED_QUOTA
+        WHERE
+            OR_JPB_ASSIGNED_QUOTA.customer_id = inuCustomerId;
+
+
+        ut_trace.trace('Inicia OR_JPB_BCAssignedQuota.CountCustomerQuota', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BCAssignedQuota.CountCustomerQuota', 7);
+            raise ex.CONTROLLED_ERROR;
+
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BCAssignedQuota.CountCustomerQuota', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END CountCustomerQuota;
+    
+    
+    /*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Procedimiento : IniciarEstaPRO
+
+    Descripción   : Procedimiento público para corroborar si ya se escribió un proceso en
+                    la tabla estaprog
+
+    Parámetros    : sbEstado   - Trae el ID del proceso que se escribirá
+                    nuProcesos - Trae el número de procesos a ejecutar
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 15-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    15-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE IniciarEstaPRO
+    (
+        sbEstado estaprog.esprprog%TYPE,
+        nuProcesos estaprog.esprsufa%TYPE
+    )
+    IS
+        sbProceso estaprog.esprprog%TYPE;
+
+        nuErrorCode or_jpb_constants_val.styNumber;
+        sbErrorMessage OR_jpb_constants_val.stySring;
+    BEGIN
+        --se va a buscar el proceso a ver si existe en la tabla
+        EXECUTE IMMEDIATE 'SELECT estaprog.esprprog FROM estaprog WHERE estaprog.esprprog = '''||sbEstado||'''' INTO sbProceso;
+
+        --dbms_output.put_Line('...'||sbProceso);
+
+        -- si existe, se borra
+        IF sbProceso IS NOT NULL THEN
+
+            EXECUTE IMMEDIATE 'DELETE FROM estaprog WHERE estaprog.esprprog = ''JP16''';
+            COMMIT;
+        END IF;
+
+        -- se escribe de nuevo
+        pkstatusexeprogrammgr.addrecordidsession(
+                sbEstado,
+                nuProcesos
+        );
+        EXCEPTION
+            WHEN OTHERS THEN
+                nuErrorCode     := SQLCODE;
+                sbErrorMessage  := SQlERRM;
+                Errors.setError;
+                Errors.getError(nuErrorCode, sbErrorMessage);
+                dbms_output.put_Line('Error en BC (Iniciar estado-proceso)');
+                dbms_output.put_line('error onuErrorCode: '||nuErrorCode);
+                dbms_output.put_line('error osbErrorMess: '||sbErrorMessage);
+    END IniciarEstaPRO;
+    
+END OR_JPB_BCAssignedQuota;
+/

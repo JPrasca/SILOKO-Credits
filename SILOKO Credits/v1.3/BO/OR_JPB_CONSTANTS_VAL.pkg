@@ -1,0 +1,104 @@
+CREATE OR REPLACE PACKAGE OR_JPB_CONSTANTS_VAL
+IS
+
+
+	-- Declaracion de Tipos de datos publicos
+    subtype styFlagString      IS         varchar(2);
+    subtype stySring           is         varchar2;
+    subtype styNumber          is         number;
+    type    tyErrorCode        IS         varray(10) OF ge_message.message_id%type;
+    TYPE    tyRefCursor        IS         REF CURSOR;
+	-- Declaracion de variables publicas
+	
+
+	csbYES                 CONSTANT styFlagString               := 'Y';
+	csbNO                  CONSTANT styFlagString               := 'N';
+    cnuVErrorCode          CONSTANT tyErrorCode                 := tyErrorCode
+                                                                  (
+                                                                    -16000, -16001, -16002,     -- 1, 2, 3
+                                                                    -666001, -666002, -666003,  -- 4, 5, 6
+                                                                    -666004, -666005, -66606    -- 7, 8, 9
+                                                                  );
+
+    /* cantidad de registros a procesar de la tabla de clientes durante la granularidad*/
+    cnuLimit                CONSTANT    OR_jpb_customer.customer_id%type    :=  200;
+    cnuMaxRecords           CONSTANT    NUMBER(15,0)                        := 2000;
+
+
+    /* dominio usado para los flags en los campos de si/no */
+    cnuDomainYesNot         CONSTANT ge_domain_values.domain_values_id%type := 60066;
+    
+    
+    /* versión, en este caso, para todos los paquetes*/
+    csbVersion              CONSTANT VARCHAR2(10) := 'SAO414826';
+    
+	-- Declaracion de metodos publicos
+	
+	
+	FUNCTION fnuGetCurrentStore
+    RETURN or_jpb_store.store_id%type;
+	
+    FUNCTION fnuGetCurrentCity
+    RETURN or_jpb_city.city_id%type;
+    
+    FUNCTION fnuGetCurrentCountry
+    RETURN or_jpb_country.country_id%type;
+
+
+
+    PROCEDURE SetCurrentLocal
+    (
+        inuCountryIn    IN  OR_jpb_country.country_id%type,
+        inuCityIn       IN  or_jpb_city.city_id%type,
+        inuStoreIn      IN  OR_jpb_store.store_id%type
+    );
+END OR_JPB_CONSTANTS_VAL;
+/
+
+CREATE OR REPLACE PACKAGE BODY OR_JPB_CONSTANTS_VAL
+IS
+	-- Declaracion de variables y tipos globales privados del paquete
+
+	-- Definicion de metodos publicos y privados del paquete
+	
+    nuCity      or_jpb_city.city_id%type;
+    nuCountry   OR_jpb_country.country_id%type;
+    nuStore     or_jpb_store.store_id%type;
+
+    FUNCTION fnuGetCurrentCity
+    RETURN or_jpb_city.city_id%type
+    IS
+    BEGIN
+        RETURN nuCity;
+    END fnuGetCurrentCity;
+    
+    FUNCTION fnuGetCurrentCountry
+    RETURN or_jpb_country.country_id%type
+    IS
+    BEGIN
+        RETURN nuCountry;
+    END fnuGetCurrentCountry;
+    
+    
+    FUNCTION fnuGetCurrentStore
+    RETURN or_jpb_store.store_id%type
+    IS
+    BEGIN
+        RETURN nuStore;
+    END fnuGetCurrentStore;
+    
+    
+    PROCEDURE SetCurrentLocal
+    (
+        inuCountryIn    IN  OR_jpb_country.country_id%type,
+        inuCityIn       IN  or_jpb_city.city_id%type,
+        inuStoreIn      IN  OR_jpb_store.store_id%type
+    )
+    IS
+    BEGIN
+        nuCity      :=  inuCityIn;
+        nuCountry   :=  inuCountryIn;
+        nuStore     :=  inuStoreIn;
+    END SetCurrentLocal;
+END OR_JPB_CONSTANTS_VAL;
+/

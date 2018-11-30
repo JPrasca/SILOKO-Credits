@@ -1,0 +1,626 @@
+CREATE OR REPLACE PACKAGE OR_JPB_BOTariff
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BOTariff
+
+    Descripción   : Objeto de negocio relacionado a la información de posibles
+                    tarifas de crédito asociados a los clientes SILOKO.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+    */
+    
+    
+	-- Declaracion de Tipos de datos publicos
+
+	-- Declaracion de variables publicas
+
+	-- Declaracion de metodos publicos
+	
+	/**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         fsbVersion
+    Descripción:    Obtiene la versión del paquete
+    ***********************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2;
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         RegistTariffSet
+    Descripción:    Método público que se usa para registrar una
+                    o criterios de asignación de cupos.
+    ***********************************************************************/
+    PROCEDURE RegistTariffSet
+    (
+        inuCountryId        IN          OR_jpb_tariff.country_id%type,
+        inuCityId           IN          OR_jpb_tariff.city_id%type,
+        inuPlanTypeId       IN          OR_jpb_tariff.plan_type_id%type,
+        inuStratumId        IN          OR_jpb_tariff.stratum_id%type,
+        inuActiveProducts   IN          OR_jpb_tariff.active_products%type,
+        inuSupLimit         IN          OR_jpb_tariff.sup_limit%type,
+        inuInfLimit         IN          OR_jpb_tariff.inf_limit%type,
+        inuAmount           IN          OR_jpb_tariff.amount%type,
+        onuErrorCode        out nocopy  ge_error_log.message_id%type,
+        osbErrorMess        out nocopy  ge_error_log.description%type
+    );
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         FillTbTariffs
+    Descripción:    Llena una tabla PL, de este mismo paquete, con los datos
+                    de conjuntos de tarifas para la asignación de cupos, asociadas,
+                    a una ciudad
+    ***********************************************************************/
+    PROCEDURE FillTbTariffs
+    (
+        inuCityId           IN  OR_jpb_tariff.city_id%type,
+        inuStratumId        IN  OR_jpb_tariff.stratum_id%type,
+        inuPlanType         IN  OR_jpb_tariff.plan_type_id%type,
+        inuActiveProducts   IN  OR_jpb_tariff.active_products%type
+    );
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         CheckRange
+    Descripción:    Verifica que, si existe un conjunto de tarifas para asignación
+                    de cupos de créditos, no haya solapamiento entre rangos de
+                    antiguedad
+    ***********************************************************************/
+    PROCEDURE CheckRange
+    (
+        inuSupLimit         IN          OR_jpb_tariff.sup_limit%type,
+        inuInfLimit         IN          OR_jpb_tariff.inf_limit%type,
+        onuErrorCode        out nocopy  ge_error_log.message_id%type,
+        osbErrorMess        out nocopy  ge_error_log.description%type
+
+    );
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         GetAssingTariff
+    Descripción:    Obtiene un conjunto de tarifas para la asignación de cupos
+    ***********************************************************************/
+    PROCEDURE GetAssingTariff(
+        inuTariffId     IN      or_jpb_tariff.tariff_id%type,
+        ocuDataCursor   out     OR_JPB_CONSTANTS_VAL.tyRefCursor
+    );
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         GetAssingTariffs
+    Descripción:    Obtiene los datos de uno o mas tarifas para asignar cupos
+                    de crédito
+    ***********************************************************************/
+    PROCEDURE GetAssingTariffs(
+        inuTariffId         IN     or_jpb_tariff.tariff_id%type,
+        inuCountryId        IN     or_jpb_tariff.country_id%type,
+        inuCityId           IN     or_jpb_tariff.city_id%type,
+        inuPlanType         IN     or_jpb_tariff.plan_type_id%type,
+        inuStratumId        IN     or_jpb_tariff.stratum_id%type,
+        /*inuActiveProducts   IN     OR_jpb_parameters.active_products%type,
+        inuInfLimit         IN     OR_jpb_parameters.inf_limit%type,
+        inuSupLimit         IN     OR_jpb_parameters.sup_limit%type,
+        inuAmount           IN     OR_jpb_parameters.amount%type */
+        ocuDataCursor       out    OR_JPB_CONSTANTS_VAL.tyRefCursor
+    );
+    
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         GetPosibleTariff
+    Descripción:    Obtiene el mayor monto a asignar para un cliente (si cumple
+                    con los criterios)
+    ***********************************************************************/
+    PROCEDURE GetPosibleTariff
+    (
+        ircCustomer IN  or_jpb_bccustomer.tyrcCustomer,
+        itbPlans    IN  or_jpb_bcplan.tytbPlan,
+        onuAmount   OUT OR_jpb_tariff.amount%type
+    );
+    
+END OR_JPB_BOTariff;
+/
+CREATE OR REPLACE PACKAGE BODY OR_JPB_BOTariff
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BOTariff
+
+    Descripción   : Objeto de negocio relacionados a la información de posibles cupos
+                    asiciados a los clientes SILOKO..
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+
+    05-05-2018    jprascaSAO414826
+    Creación
+    */
+    
+    
+	-- Declaracion de variables y tipos globales privados del paquete
+    CSBVERSION          CONSTANT VARCHAR2(10) := or_jpb_constants_val.csbVersion;
+    cnuDomainYesNot     CONSTANT ge_domain_values.domain_values_id%type := or_jpb_constants_val.cnuDomainYesNot;
+    
+    tbTariffs           daor_jpb_tariff.tytbOR_jpb_tariff;
+
+
+	-- Definicion de metodos publicos y privados del paquete
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : FSBVERSION
+
+    Descripción   : Función pública que se usa para obtener la versión del paquete
+
+    Parámetros    :
+
+    Retorno       : CSBVERSION - retorna la variable que contiene la versión
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2 IS
+    BEGIN
+        return CSBVERSION;
+    END FSBVERSION;
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : RegistParamSet
+
+    Descripción   : Método público que se usa para registrar un conjunto de parámetros
+                    o criterios de asignación de cupos.
+
+    Parámetros    : inuCountryId        -  Id del país
+                    inuCityId           -  Id de la ciudad
+                    inuPlanTypeId       -  Tipo de plan
+                    inuStratumId        -  Estrato
+                    inuActiveProducts   -  Cantidad de productos activos
+                    inuSupLimit         -  Límite inferior del rango de antiguedad
+                    inuInfLimit         -  Límite superior del rango de antiguedad
+                    inuAmount           -  Monto a aplicar
+                    onuErrorCode        -  Código del mensaje
+                    osbErrorMess        -  Mensaje
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE RegistTariffSet
+    (
+        inuCountryId        IN          OR_jpb_tariff.country_id%type,
+        inuCityId           IN          OR_jpb_tariff.city_id%type,
+        inuPlanTypeId       IN          OR_jpb_tariff.plan_type_id%type,
+        inuStratumId        IN          OR_jpb_tariff.stratum_id%type,
+        inuActiveProducts   IN          OR_jpb_tariff.active_products%type,
+        inuSupLimit         IN          OR_jpb_tariff.sup_limit%type,
+        inuInfLimit         IN          OR_jpb_tariff.inf_limit%type,
+        inuAmount           IN          OR_jpb_tariff.amount%type,
+        onuErrorCode        out nocopy  ge_error_log.message_id%type,
+        osbErrorMess        out nocopy  ge_error_log.description%type
+    )
+    IS
+        rctariffSet  daor_jpb_tariff.styOR_jpb_tariff;
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOTariff.RegistTariffSet', 7);
+
+        CheckRange(inuSupLimit, inuInfLimit, onuErrorCode, osbErrorMess);
+        
+        ut_trace.trace('Error: '||onuErrorCode, 7);
+        
+        IF onuErrorCode = 0
+        THEN
+            rctariffSet.tariff_id       := seq.getnext('SEQ_OR_JPB_TARIFF_373853');
+            rctariffSet.country_id      := inuCountryId;
+            rctariffSet.city_id         := inuCityId;
+            rctariffSet.plan_type_id    := inuPlanTypeId;
+            rctariffSet.stratum_id      := inuStratumId;
+            rctariffSet.active_products := inuActiveProducts;
+            rctariffSet.sup_limit       := inuSupLimit;
+            rctariffSet.inf_limit       := inuInfLimit;
+            rctariffSet.amount          := inuAmount;
+            
+            
+            daor_jpb_tariff.insRecord(rctariffSet);
+        END IF;
+
+        ut_trace.trace('Termina OR_JPB_BOTariff.RegistTariffSet', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            Errors.seterror;
+            Errors.geterror(onuErrorCode, osbErrorMess);
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOTariff.RegistTariffSet', 7);
+            --raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOTariff.RegistTariffSet', 7);
+            Errors.setError;
+            Errors.geterror(onuErrorCode, osbErrorMess);
+            --raise ex.CONTROLLED_ERROR;
+    END RegistTariffSet;
+    
+    
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : FillTbTariffs
+
+    Descripción   : Método público que se usa para llenar una tabla en memoria
+                    que contiene los datos de tarifas asociadas a una ciudad.
+
+    Parámetros    : inuCityId           - Identificador de la ciudad
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE FillTbTariffs
+    (
+        inuCityId           IN  OR_jpb_tariff.city_id%type,
+        inuStratumId        IN  OR_jpb_tariff.stratum_id%type,
+        inuPlanType         IN  OR_jpb_tariff.plan_type_id%type,
+        inuActiveProducts   IN  OR_jpb_tariff.active_products%type
+    )
+    IS
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOTariff.FillTbTariffs', 7);
+
+        tbTariffs.DELETE;
+
+        or_jpb_bctariff.FillTbTariffs(inuCityId, inuStratumId, inuPlanType, inuActiveProducts, tbTariffs);
+
+        ut_trace.trace('Termina OR_JPB_BOTariff.FillTbTariffs', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOTariff.FillTbTariffs', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOTariff.FillTbTariffs', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END FillTbTariffs;
+    
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : CheckRange
+
+    Descripción   : Método que verifica que, si existe una tarifa de asignación de cupo,
+                    no haya solapamiento entre rangos de antiguedad.
+
+    Parámetros    : inuSupLimit     -  Límite superior en el rango de años de antigüedad
+                    inuInfLimit     -  Límite inferior en el rango de años de antigüedad
+                    onuErrorCode    -  Código del error a mostrar en pantalla
+                    osbErrorMess    -  Mensaje de error a mostrar en pantalla
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE CheckRange
+    (
+        inuSupLimit         IN          OR_jpb_tariff.sup_limit%type,
+        inuInfLimit         IN          OR_jpb_tariff.inf_limit%type,
+        onuErrorCode        out nocopy  ge_error_log.message_id%type,
+        osbErrorMess        out nocopy  ge_error_log.description%type
+        
+    )
+    IS
+        nuIndex OR_jpb_tariff.tariff_id%type := 0;
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOTariff.CheckRange', 7);
+        nuIndex := tbTariffs.FIRST;
+        
+        onuErrorCode := 0;
+        osbErrorMess := '';
+        
+        /*recorre hasta hallar o no solapamiento ente rangos */
+        LOOP
+            EXIT WHEN nuIndex IS NULL;
+            ut_trace.trace(
+                'Ontiene los rangos '||tbTariffs(nuIndex).inf_limit
+                ||' vs '||inuInfLimit||', y '||tbTariffs(nuIndex).sup_limit
+                ||' vs '||inuSupLimit
+                , 7);
+            IF (inuInfLimit BETWEEN tbTariffs(nuIndex).inf_limit AND tbTariffs(nuIndex).sup_limit)
+            OR (inuSupLimit BETWEEN tbTariffs(nuIndex).inf_limit AND tbTariffs(nuIndex).sup_limit)
+            OR (tbTariffs(nuIndex).inf_limit BETWEEN inuInfLimit AND inuSupLimit)
+            OR (tbTariffs(nuIndex).sup_limit BETWEEN inuInfLimit AND inuSupLimit)
+            THEN
+                ut_trace.trace('Se solapan... error -16002', 7);
+                onuErrorCode := or_jpb_constants_val.cnuVErrorCode(3);
+                osbErrorMess := dage_message.fsbgetdescription(or_jpb_constants_val.cnuVErrorCode(3)); --ge_message
+                EXIT;
+            END IF;
+            
+            nuIndex := tbTariffs.NEXT(nuIndex);
+        END LOOP;
+        
+        ut_trace.trace('Finaliza OR_JPB_BOTariff.CheckRange', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOTariff.CheckRange', 7);
+            Errors.setError;
+            Errors.getError(onuErrorCode, osbErrorMess);
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOTariff.CheckRange', 7);
+            Errors.setError;
+            Errors.getError(onuErrorCode, osbErrorMess);
+
+    END CheckRange;
+
+
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : GetAssingTariff
+
+    Descripción   : Método que obtiene los datos de un registro que contiene los datos
+                    de una tarifa para la asignación de cupos de crédito.
+
+    Parámetros    : inuTariffId     -  Identificador de la tarifa
+                    ocuDataCursor   -  CURSOR que toma los datos
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 10-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    10-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE GetAssingTariff(
+        inuTariffId     IN      or_jpb_tariff.tariff_id%type,
+        ocuDataCursor   out     OR_JPB_CONSTANTS_VAL.tyRefCursor
+    )
+    IS
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOTariff.GetAssingTariff', 7);
+
+        or_jpb_bctariff.GetAssingTariff(inuTariffId, ocuDataCursor);
+
+        ut_trace.trace('Finaliza OR_JPB_BOTariff.GetAssingTariff', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOTariff.GetAssingTariff', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOTariff.GetAssingTariff', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END GetAssingTariff;
+    
+    
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : GetAssingTariffs
+
+    Descripción   : Método que obtiene los datos de un registro que contiene una
+                   tarifa para la asignación de cupos de crédito.
+
+    Parámetros    : inuTariffId     -  Identificador de la tarifa
+                    inuCountryId    -  Identificador del país
+                    inuCityId       -  Identificador de la ciudad
+                    inuPlanType     -  Identificador del tipo de plan
+                    inuStratumId    -  Identificador del estrato
+                    ocuDataCursor   -  CURSOR que toma los datos
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 10-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    10-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE GetAssingTariffs(
+        inuTariffId         IN     or_jpb_tariff.tariff_id%type,
+        inuCountryId        IN     or_jpb_tariff.country_id%type,
+        inuCityId           IN     or_jpb_tariff.city_id%type,
+        inuPlanType         IN     or_jpb_tariff.plan_type_id%type,
+        inuStratumId        IN     or_jpb_tariff.stratum_id%type,
+        /*inuActiveProducts   IN     OR_jpb_parameters.active_products%type,
+        inuInfLimit         IN     OR_jpb_parameters.inf_limit%type,      OR_JPB_City
+        inuSupLimit         IN     OR_jpb_parameters.sup_limit%type,
+        inuAmount           IN     OR_jpb_parameters.amount%type */
+        ocuDataCursor       out    OR_JPB_CONSTANTS_VAL.tyRefCursor
+    )
+    IS
+
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOTariff.GetAssingTariffs', 7);
+
+        or_jpb_bctariff.GetAssingTariffs
+        (
+            inuTariffId,
+            inuCountryId,
+            inuCityId,
+            inuPlanType,
+            inuStratumId,
+            ocuDataCursor
+        );
+
+        ut_trace.trace('Finaliza OR_JPB_BOTariff.GetAssingTariffs', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOTariff.GetAssingTariffs', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOTariff.GetAssingTariffs', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END GetAssingTariffs;
+    
+    
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : GetPosibleTariff
+
+    Descripción   : Método que obtiene el monto de una tarifa que se acopla a los datos de
+                    un cliente.
+
+    Parámetros    : ircCustomer     -   Datos de un cliente
+                    itbPlans        -   Listado de planes de un cliente
+                    onuAmount       -   Monto a asignar segun la tarifa
+
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 10-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    10-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE GetPosibleTariff
+    (
+        ircCustomer IN  or_jpb_bccustomer.tyrcCustomer,
+        itbPlans    IN  or_jpb_bcplan.tytbPlan,
+        onuAmount   OUT OR_jpb_tariff.amount%type
+    )
+    IS
+        nuPlanIndex         or_jpb_constants_val.styNumber  :=  0;
+        nuTariffId          OR_jpb_constants_val.styNumber;
+        nuAuxAmount         OR_JPB_constants_val.styNumber;
+        nuTariffIndex       or_jpb_constants_val.styNumber  :=  0;
+        tbPosibleTariff     or_jpb_bctariff.tytbPossibleTariff;
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOTariff.GetPosibleTariff', 7);
+        onuAmount   := 0;
+
+        IF itbPlans.COUNT > 0
+        THEN
+            tbPosibleTariff.delete;
+            nuPlanIndex := itbPlans.FIRST;
+            LOOP
+                EXIT WHEN nuPlanIndex IS NULL;
+
+                or_jpb_bctariff.GetPosibleTariff
+                (
+                    nuTariffId,
+                    nuAuxAmount,
+                    ircCustomer.country_id,
+                    ircCustomer.city_id,
+                    itbPlans(nuPlanIndex).plan_type_id,
+                    ircCustomer.stratum_id,
+                    itbPlans.COUNT,
+                    ircCustomer.stay_time
+                );
+
+                IF (nuTariffId IS NOT NULL AND nuAuxAmount IS NOT NULL)
+                THEN
+                    tbPosibleTariff(nuTariffIndex).tariff_id   :=  nuTariffId;
+                    tbPosibleTariff(nuTariffIndex).amount      :=  nuAuxAmount;
+
+                END IF;
+
+                nuTariffIndex   :=  nuTariffIndex + 1;
+                nuPlanIndex     :=  itbPlans.NEXT(nuPlanIndex);
+            END LOOP;
+        END IF;
+
+        IF tbPosibleTariff.COUNT > 0
+        THEN
+            nuTariffIndex   := tbPosibleTariff.FIRST;
+            onuAmount       :=  tbPosibleTariff(tbPosibleTariff.FIRST).amount;
+
+            LOOP
+                EXIT WHEN nuTariffIndex IS NULL;
+
+                IF tbPosibleTariff(nuTariffIndex).amount >= onuAmount
+                THEN
+                    --dbms_output.put_Line(onuAmount);
+                    onuAmount:= tbPosibleTariff(nuTariffIndex).amount;
+                END IF;
+
+                nuTariffIndex   :=  tbPosibleTariff.NEXT(nuTariffIndex);
+            END LOOP;
+        END IF;
+
+        ut_trace.trace('Finaliza OR_JPB_BOTariff.GetPosibleTariff', 7);
+    EXCEPTION
+        when no_data_found then
+            onuAmount   := -1;
+        when ex.CONTROLLED_ERROR then
+            onuAmount   := -1;
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOTariff.GetPosibleTariff', 7);
+            --raise ex.CONTROLLED_ERROR;
+        when others then
+            onuAmount   := -1;
+            ut_trace.trace('Termina others OR_JPB_BOTariff.GetPosibleTariff', 7);
+            Errors.setError;
+            --raise ex.CONTROLLED_ERROR;
+    END GetPosibleTariff;
+    
+END OR_JPB_BOTariff;
+/

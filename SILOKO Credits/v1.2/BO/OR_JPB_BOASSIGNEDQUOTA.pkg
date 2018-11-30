@@ -1,0 +1,162 @@
+CREATE OR REPLACE PACKAGE OR_JPB_BOAssignedQuota
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BOAssignedQuota
+
+    Descripción   : Objeto de negocio relacionados a la información de cupos de crédito
+                    asociados a los clientes SILOKO.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+    */
+    
+    
+	-- Declaracion de Tipos de datos publicos
+
+	-- Declaracion de variables publicas
+
+	-- Declaracion de metodos publicos
+	
+	/**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         fsbVersion
+    Descripción:    Obtiene la versión del paquete
+    ***********************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2;
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         AssignSingleQuota
+    Descripción:    Asigna un cupo manualmente a un cliente SILOKO
+    ***********************************************************************/
+    PROCEDURE AssignSingleQuota
+    (
+        inuCustomerId    IN     or_jpb_assigned_quota.customer_id%TYPE,
+        inuAssigned      IN     or_jpb_assigned_quota.assigned%TYPE,
+        inuSuccess       OUT    ge_message.message_id%TYPE,
+        inuFlag          IN     or_jpb_constants_val.styNumber default 0
+    );
+
+
+
+
+
+END OR_JPB_BOAssignedQuota;
+/
+CREATE OR REPLACE PACKAGE BODY OR_JPB_BOAssignedQuota
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BOPlan
+
+    Descripción   : Objeto de negocio relacionados a la información de los clientes SILOKO..
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+
+    02-05-2018    jprascaSAO414826
+    Creación
+    */
+    
+    
+	-- Declaracion de variables y tipos globales privados del paquete
+    CSBVERSION                  CONSTANT VARCHAR2(10) := 'SAO414826';
+
+
+	-- Definicion de metodos publicos y privados del paquete
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : FSBVERSION
+
+    Descripción   : Función pública que se usa para obtener la versión del paquete
+
+    Parámetros    :
+
+    Retorno       : CSBVERSION - retorna la variable que contiene la versión
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 02-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    02-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2 IS
+    BEGIN
+        return CSBVERSION;
+    END FSBVERSION;
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : AssignSingleQuota
+
+    Descripción   : Método público que se usa para asignar un cupo a un cliente
+                    (que no tiene cupo asigando) ignorando los criterios de
+                    asignación (manualmente).
+
+    Parámetros    : inuCustomerId   -   Identificador del cliente SILOKO
+                    inuAssigned     -   Monto a asignar en el cupo
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 05-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    05-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE AssignSingleQuota
+    (
+        inuCustomerId    IN     or_jpb_assigned_quota.customer_id%TYPE,
+        inuAssigned      IN     or_jpb_assigned_quota.assigned%TYPE,
+        inuSuccess       OUT    ge_message.message_id%TYPE,
+        inuFlag          IN     or_jpb_constants_val.styNumber default 0
+    )
+    IS
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOAssignedQuota.AssignSingleQuota', 7);
+
+        or_jpb_bcassignedquota.AssignSingleQuota(inuCustomerId, inuAssigned, inuSuccess);
+
+        ut_trace.trace('Termina OR_JPB_BOAssignedQuota.AssignSingleQuota', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOAssignedQuota.AssignSingleQuota', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOAssignedQuota.AssignSingleQuota', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END AssignSingleQuota;
+    
+
+END OR_JPB_BOAssignedQuota;
+/

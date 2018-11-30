@@ -1,0 +1,142 @@
+BEGIN ut_trace.trace('********************Comenzar proceso de objeto:JPMDA******************************'); END;
+/
+DECLARE
+clXml CLOB;
+
+BEGIN
+clXml := '<?xml version="1.0" encoding="WINDOWS-1252"?>
+<APPLICATION>
+  <INFO>
+    <NAME>JPMDA</NAME>
+    <DISPLAY>Artículos con SILOKO Code</DISPLAY>
+    <AUTHOR>OpenSystems</AUTHOR>
+    <TYPE>MD</TYPE>
+    <MODULE>OR</MODULE>
+    <SITE>
+      <APPLICATION>JPPCL</APPLICATION>
+      <QUERY>edcadf33-b8bd-4452-a051-142322e97d22</QUERY>
+    </SITE>
+    <HELP/>
+  </INFO>
+  <VIEW>
+    <TABVIEW>
+      <TABNAME>Artículos</TABNAME>
+      <INFOCLASS>0</INFOCLASS>
+      <POSLEVEL>0,0</POSLEVEL>
+      <GRANT>CRUD</GRANT>
+      <DISPLAYTYPE>G</DISPLAYTYPE>
+      <TABATTRIBUTE>
+        <NAME>PRICE</NAME>
+        <POSITION>2</POSITION>
+      </TABATTRIBUTE>
+      <TABATTRIBUTE>
+        <NAME>DESCRIPTION</NAME>
+        <POSITION>1</POSITION>
+      </TABATTRIBUTE>
+      <TABATTRIBUTE>
+        <NAME>ITEM_ID</NAME>
+        <SEQUENCE>SEQ_OR_JPB_ITEM_372540</SEQUENCE>
+        <POSITION>0</POSITION>
+      </TABATTRIBUTE>
+      <DATA>
+        <NAME>OR_JPB_ITEM</NAME>
+        <MODEL>
+          <ENTITY>
+            <NAME>OR_JPB_ITEM</NAME>
+            <ATTRIBUTE>
+              <NAME>PRICE</NAME>
+              <TYPE>Decimal</TYPE>
+              <KEY>false</KEY>
+              <LENGTH>20</LENGTH>
+              <SCALE>4</SCALE>
+              <ISNULL>true</ISNULL>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+              <NAME>DESCRIPTION</NAME>
+              <TYPE>Varchar</TYPE>
+              <KEY>false</KEY>
+              <LENGTH>0</LENGTH>
+              <SCALE>0</SCALE>
+              <ISNULL>false</ISNULL>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+              <NAME>ITEM_ID</NAME>
+              <TYPE>Number</TYPE>
+              <KEY>true</KEY>
+              <LENGTH>15</LENGTH>
+              <SCALE>0</SCALE>
+              <ISNULL>false</ISNULL>
+            </ATTRIBUTE>
+          </ENTITY>
+        </MODEL>
+        <VIEW>
+          <NAME>OR_JPB_ITEM</NAME>
+          <DISPLAY>Artículos</DISPLAY>
+          <SINGULARDISPLAY>Articulo</SINGULARDISPLAY>
+          <GROUP>
+            <PARAMETER>
+              <NAME>PRICE</NAME>
+              <DISPLAY>Precio del artículo</DISPLAY>
+              <TOOLTIP>Precio del articulo.</TOOLTIP>
+              <READONLY>true</READONLY>
+              <REQUIRED>true</REQUIRED>
+              <VISIBLE>true</VISIBLE>
+              <STYLECASE>Upper</STYLECASE>
+            </PARAMETER>
+            <PARAMETER>
+              <NAME>DESCRIPTION</NAME>
+              <DISPLAY>Descripción</DISPLAY>
+              <TOOLTIP>Descripción del producto.</TOOLTIP>
+              <READONLY>true</READONLY>
+              <REQUIRED>true</REQUIRED>
+              <VISIBLE>true</VISIBLE>
+              <STYLECASE>Upper</STYLECASE>
+            </PARAMETER>
+            <PARAMETER>
+              <NAME>ITEM_ID</NAME>
+              <DISPLAY>SILOKO Code</DISPLAY>
+              <TOOLTIP>Código de SILOKO.</TOOLTIP>
+              <READONLY>false</READONLY>
+              <REQUIRED>true</REQUIRED>
+              <VISIBLE>true</VISIBLE>
+              <STYLECASE>Upper</STYLECASE>
+              <REPRESENTATIVE>1</REPRESENTATIVE>
+            </PARAMETER>
+          </GROUP>
+        </VIEW>
+        <CTRL>
+          <NAME>OR_JPB_ITEM</NAME>
+          <PARAMETERS>
+            <NAME>PRICE</NAME>
+            <COMPONENT>
+              <TYPE>Textbox</TYPE>
+            </COMPONENT>
+          </PARAMETERS>
+          <PARAMETERS>
+            <NAME>DESCRIPTION</NAME>
+            <COMPONENT>
+              <TYPE>Textbox</TYPE>
+            </COMPONENT>
+          </PARAMETERS>
+          <PARAMETERS>
+            <NAME>ITEM_ID</NAME>
+            <COMPONENT>
+              <TYPE>Textbox</TYPE>
+            </COMPONENT>
+          </PARAMETERS>
+        </CTRL>
+      </DATA>
+    </TABVIEW>
+  </VIEW>
+</APPLICATION>
+';
+ge_boapplication.Save(clXml);
+commit;
+exception when others then
+rollback;
+ut_trace.trace('||**ERROR:'|| sqlerrm);
+raise;
+END;
+/
+BEGIN ut_trace.trace('********************FIN  proceso de objeto:JPMDA******************************'); end;
+/

@@ -1,0 +1,114 @@
+BEGIN ut_trace.trace('********************Comenzar proceso de objeto:JPPCJ******************************'); END;
+/
+DECLARE
+clXml CLOB;
+
+BEGIN
+clXml := '<?xml version="1.0" encoding="WINDOWS-1252"?>
+<APPLICATION>
+  <INFO>
+    <NAME>JPPCJ</NAME>
+    <DISPLAY>SILOKO Credits (Caja)</DISPLAY>
+    <AUTHOR>OpenSystems</AUTHOR>
+    <TYPE>PI</TYPE>
+    <MODULE>OR</MODULE>
+    <SITE>
+      <APPLICATION>JPPCL</APPLICATION>
+      <QUERY>991b702c-378a-4c82-b4fa-9f4843fecac6</QUERY>
+    </SITE>
+    <MENU>orden</MENU>
+  </INFO>
+</APPLICATION>
+';
+ge_boapplication.Save(clXml);
+commit;
+exception when others then
+rollback;
+ut_trace.trace('||**ERROR:'|| sqlerrm);
+raise;
+END;
+/
+BEGIN ut_trace.trace('********************FIN  proceso de objeto:JPPCJ******************************'); end;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE ''||
+        'CREATE OR REPLACE FUNCTION fblB64Clob11052018182740387955'|| chr(10) ||
+        '('|| chr(10) ||
+            'iclFileContent in clob'|| chr(10) ||
+        ')'|| chr(10) ||
+        'RETURN BLOB'|| chr(10) ||
+        'AS LANGUAGE JAVA NAME ''os.ge.util.Decoder.decodeB64CLOB(java.sql.Clob) return java.sql.Blob'';';
+END;
+/
+BEGIN
+    EXECUTE IMMEDIATE 'GRANT EXECUTE ON fblB64Clob11052018182740387955 TO SYSTEM_OBJ_PRIVS_ROLE';
+END;
+/
+DECLARE
+    sbDistFileId        ge_distribution_file.distribution_file_id%type;
+    blFileContent       ge_distribution_file.app_html%type;
+    clB64FileContent    clob;
+BEGIN
+    sbDistFileId        := 'JPPCJ';
+    dbms_lob.createtemporary(clB64FileContent, TRUE);
+dbms_lob.append(clB64FileContent, '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
+BgAOAgAAswUAAAAA');
+blFileContent := fblB64Clob11052018182740387955(clB64FileContent);
+    UPDATE ge_distribution_file
+    SET	app_html = blFileContent
+    WHERE distribution_file_id = sbDistFileId;
+    dbms_lob.freetemporary(clB64FileContent);
+    dbms_lob.freetemporary(blFileContent);
+    commit;
+EXCEPTION
+	when others then
+		rollback;
+END;
+/
+BEGIN
+    EXECUTE IMMEDIATE 'DROP FUNCTION fblB64Clob11052018182740387955';
+END;
+/
+
+
+BEGIN
+    if (ut_object.fboExistObject('or_wiJPPCJ')) then
+        execute immediate 'DROP PACKAGE or_wiJPPCJ';
+    end if;
+END;
+/

@@ -1,0 +1,28 @@
+SOBRE SILOKO CREDITS:
+
+Es una aplicación encaminada a suplir las necesidades manifestadas por la empresa SILOKO Mobile, compañía que ha decidido,
+a parte de vender productos de telefonía (SILOKO Básico, Vacano (con V), Ninja), también ofrecerá cupos de crédito para que
+sus clientes puedan disfrutar más ampliamente de los beneficios que se ofrecen.
+
+EL cliente que posee al menos 1 producto de telefonía activo podrá solicitar un cupo de crédito que le será asignado depen-
+diendo de varios parámetros:
+
+- Plan de Telefonía
+- País 
+- Ciudad
+- Estrato
+- Rango Antigüedad en la empresa (Ej. 2-6 años)
+- Cantidad de productos activos
+
+No debe haber solapamiento de rangos de antigüedad para los mismos valores de variable que se configuren, es decir; 
+para el plan SILOKO Basic, en Cali, Colombia, Estrato 4, con 1 producto activo no puede haber un rango de antigüedad 
+2-4 y otro 3-6, deben ser excluyentes
+
+-Asignación masiva de cupos de crédito a clientes
+-Asignación manual de cupo a un cliente (hay casos en los que se ignoran los criterios de asignación)
+-Bloqueo manual de cupo a un cliente
+-Registro de solicitud y autorización de crédito
+-Confirmación de solicitud de crédito
+-Consulta de Financiaciones
+  
+... Y de eso se trata, brevemente.

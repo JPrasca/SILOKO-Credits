@@ -1,0 +1,346 @@
+CREATE OR REPLACE PACKAGE OR_JPB_BOCredit
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BOCredit
+
+    Descripción   : Objeto de negocio relacionados a la información de los clientes SILOKO.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 09-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    09-05-2018    jprascaSAO414826
+    Creación
+    */
+    
+    
+	-- Declaracion de Tipos de datos publicos
+
+	-- Declaracion de variables publicas
+
+	-- Declaracion de metodos publicos
+	
+	/**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         fsbVersion
+    Descripción:    Obtiene la versión del paquete
+    ***********************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2;
+
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         GetCredit
+    Descripción:    Obtiene lo datos de un crédito SILOKO
+    ***********************************************************************/
+    PROCEDURE GetCredit
+    (
+        inuCreditId         in  or_jpb_credit.credit_id%TYPE,
+        ocuDataCursor       out constants.tyRefCursor
+    );
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         GetCredits
+    Descripción:    Obtiene lo datos de uno o mas céditos SILOKO
+    ***********************************************************************/
+    PROCEDURE GetCredits
+    (
+        inuCreditId         in  or_jpb_credit.credit_id%TYPE,
+        inuCustomerId       in  or_jpb_credit.customer_id%TYPE,
+        inuStoreId          in  or_jpb_credit.store_id%TYPE,
+        ocuDataCursor       out constants.tyRefCursor
+    );
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         GetCustomerCredits
+    Descripción:    Obtiene lo datos de uno o mas créditos asociados a un cliente
+    ***********************************************************************/
+    PROCEDURE GetCustomerCredits
+    (
+        inuCostumerId       in  or_jpb_credit.customer_id%type,
+        ocuDataCursor       out constants.tyRefCursor,
+        inuFlag             in  NUMBER default 0
+    );
+    
+
+
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         fnuGetCustomerId
+    Descripción:    Obtien el ID del cliente asociado al crédito
+    ***********************************************************************/
+    FUNCTION fnuGetCustomerId
+    (
+        inuCreditId   IN or_jpb_credit.credit_id%type
+    )
+    RETURN or_jpb_credit.customer_id%TYPE;
+
+END OR_JPB_BOCredit;
+/
+CREATE OR REPLACE PACKAGE BODY OR_JPB_BOCredit
+IS
+
+    /*
+    Propiedad intelectual de Open International Systems. (c)
+
+    Paquete       : OR_JPB_BOCredit
+
+    Descripción   : Objeto de negocio relacionados a la información de los créditos SILOKO.
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 08-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+
+    08-05-2018    jprascaSAO414826
+    Creación
+    */
+    
+    
+	-- Declaracion de variables y tipos globales privados del paquete
+    CSBVERSION                  CONSTANT VARCHAR2(10) := or_jpb_constants_val.csbVersion;
+
+
+	-- Definicion de metodos publicos y privados del paquete
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : FSBVERSION
+
+    Descripción   : Función pública que se usa para obtener la versión del paquete
+
+    Parámetros    :
+
+    Retorno       : CSBVERSION - retorna la variable que contiene la versión
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 08-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    08-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2 IS
+    BEGIN
+        return CSBVERSION;
+    END FSBVERSION;
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : GetCredit
+
+    Descripción   : Procedimiento público que obtiene los datos de un crédito
+                    asociado a un cliente SILOKO
+
+    Parámetros    : inuCreditId     -   Identificador del crédito
+                    ocuDataCursor   -   CURSOR que captura los datos
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 08-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    08-05-2018    jprascaSAO414826                ge_message
+    Creación
+*******************************************************************************/
+    PROCEDURE GetCredit
+    (
+        inuCreditId         in  or_jpb_credit.credit_id%TYPE,
+        ocuDataCursor       out constants.tyRefCursor
+    )
+    IS
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOCredit.GetCredit', 7);
+
+        -- Se realiza la consulta
+        or_jpb_bccredits.GetCredit
+        (
+            inuCreditId,
+            ocuDataCursor
+        );
+
+        ut_trace.trace('Termina OR_JPB_BOCredit.GetCredit', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOCredit.GetCredit', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOCredit.GetCredit', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END GetCredit;
+
+
+
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : GetCredits
+
+    Descripción   : Procedimiento público que obtiene los datos de varios créditos
+                    que cumplen con los criterios de búsqueda
+
+    Parámetros    : inuCreditId     -   Identificador del crédito
+                    isbCustomerId   -   Identificador del cliente
+                    inuStoreId      -   Identificador del almacén
+                    ocuDataCursor   -   CURSOR que toma los datos
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 08-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    08-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE GetCredits
+    (
+        inuCreditId         in  or_jpb_credit.credit_id%TYPE,
+        inuCustomerId       in  or_jpb_credit.customer_id%TYPE,
+        inuStoreId          in  or_jpb_credit.store_id%TYPE,
+        ocuDataCursor       out constants.tyRefCursor
+    )
+    IS
+
+    BEGIN
+
+
+        ut_trace.trace('Inicia OR_JPB_BOCredit.GetCredits', 7);
+
+        or_jpb_bccredits.GetCredits(inuCreditId, inuCustomerId, inuStoreId, ocuDataCursor);
+
+        ut_trace.trace('Termina OR_JPB_BOCredit.GetCredits', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOCredit.GetCredits', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOCredit.GetCredits', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END GetCredits;
+    
+    
+    
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : GetCustomerCredits
+
+    Descripción   : Procedimiento público que obtiene los datos de créditos asociados
+                    a un cliente
+
+    Parámetros    : inuCustomerId   -   Identificador del cliente
+                    ocuDataCursor   -   CURSOR que toma los datos
+                    inuFlag         -   Bandera que indica cambio de campos de retorno
+                                        en la consulta
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 08-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega             OR_jpb_store
+
+    08-05-2018    jprascaSAO414826
+    Creación
+*******************************************************************************/
+    PROCEDURE GetCustomerCredits
+    (
+        inuCostumerId       in  or_jpb_credit.customer_id%type,
+        ocuDataCursor       out constants.tyRefCursor,
+        inuFlag             in  NUMBER default 0
+    )
+    IS
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOCredit.GetCustomerCredits', 7);
+        
+        or_jpb_bccredits.GetCustomerCredits(inuCostumerId, ocuDataCursor);
+        
+        ut_trace.trace('Termina OR_JPB_BOCredit.GetCustomerCredits', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOCredit.GetCustomerCredits', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOCredit.GetCustomerCredits', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END GetCustomerCredits;
+    
+
+
+/*******************************************************************************
+    Propiedad intelectual de Open International Systems. (c)
+
+    Método:       : fnuGetCustomerId
+
+    Descripción   : Método público que obtiene el cliente asociado al crédito
+
+    Parámetros    : inuCreditId     -   Identificador del crédito
+
+    Retorno       :
+
+    Autor         : Jesús David Prasca Bustos
+    Fecha         : 08-05-2018
+
+    Historia de Modificaciones
+    Fecha         IDEntrega
+
+    08-05-2018   jprascaSAO414826
+    Creación
+*******************************************************************************/
+    FUNCTION fnuGetCustomerId
+    (
+        inuCreditId   IN or_jpb_credit.credit_id%type
+    )
+    RETURN OR_jpb_credit.customer_id%type
+    IS
+    BEGIN
+        ut_trace.trace('Inicia OR_JPB_BOCredit.fnuGetCustomerId', 7);
+
+        -- Se realiza la consulta
+        return daor_jpb_credit.fnuGetCustomer_Id(inuCreditId);
+
+        ut_trace.trace('Termina OR_JPB_BOCredit.fnuGetCustomerId', 7);
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            ut_trace.trace('Termina ex.CONTROLLED_ERROR OR_JPB_BOCredit.fnuGetCustomerId', 7);
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            ut_trace.trace('Termina others OR_JPB_BOCredit.fnuGetCustomerId', 7);
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END fnuGetCustomerId;
+
+END OR_JPB_BOCredit;
+/

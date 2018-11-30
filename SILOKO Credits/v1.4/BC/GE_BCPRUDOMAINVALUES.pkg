@@ -1,0 +1,153 @@
+CREATE OR REPLACE PACKAGE GE_BCPRUDomainValues
+IS
+/*****************************************************************
+Propiedad intelectual de Open International Systems (c).
+
+Unidad         : GE_BOPRUDomainValues
+Descripcion    : Lógica de negocios para los dominios de valores
+
+
+Metodos
+
+Nombre         :
+Parametros         Descripcion
+============	===================
+
+
+Historia de Modificaciones
+Fecha             Autor             Modificacion
+=========   ========= ====================
+19-04-2018  Sagudelo.SAOXXXXXX      Creación
+******************************************************************/
+    /**********************************************************************
+    Propiedad intelectual de OPEN International Systems
+    Nombre:         FSBVERSION
+    Descripción:    Obtiene la verión del paquete
+    ***********************************************************************/
+    FUNCTION FSBVERSION
+    RETURN  VARCHAR2;
+    
+    /*****************************************************************
+    Propiedad intelectual de Open International Systems (c).
+    Unidad      :   fsbGetDomainValue
+    Descripcion :   Obtiene la información de los contratistas que cumplan con
+                    los criterios
+    ******************************************************************/
+    FUNCTION fsbGetDomainValue
+    (
+        inuDomain           in ge_domain_values.domain_values_id%type,
+        isbValue            in ge_domain_values.value%type
+    )
+    RETURN ge_domain_values.description%type;
+END GE_BCPRUDomainValues;
+/
+CREATE OR REPLACE PACKAGE BODY GE_BCPRUDomainValues
+IS
+/*****************************************************************
+Propiedad intelectual de Open International Systems (c).
+
+Unidad         : GE_BCPRUDomainValues
+Descripcion    : Acceso a datos para contratistas
+
+
+Metodos
+
+Nombre         :
+Parametros         Descripcion
+============	===================
+
+
+Historia de Modificaciones
+Fecha             Autor             Modificacion
+=========   ========= ====================
+19-04-2018  Sagudelo.SAOXXXXXX      Creación
+******************************************************************/
+	-- Declaracion de variables y tipos globales privados del paquete
+    CSBVERSION                  CONSTANT VARCHAR2(10) := 'SAO436021';
+
+
+	-- Definicion de metodos publicos y privados del paquete
+
+
+	/**********************************************************************
+        Propiedad intelectual de OPEN International Systems
+        Nombre:         FSBVERSION
+        Descripción:    Obtiene la verión del paquete
+
+        Parametros
+        Nombre              Descripción
+        ================    ===================================================
+        nuContractorId      Identificador de Contrato.
+
+        Retorno: Estado del Contrato
+                                                                              ct_bofwcertificate
+        Historia de Modificaciones
+        Fecha             Autor                 Modificación
+        ---------------------------------------------------------------------
+        19-04-2018  Sagudelo.SAOXXXXXX      Creación
+    ***********************************************************************/
+    FUNCTION FSBVERSION
+    RETURN VARCHAR2 IS
+    BEGIN
+        return CSBVERSION;
+    END FSBVERSION;
+    
+    /*****************************************************************
+    Propiedad intelectual de Open International Systems (c).
+    Unidad      :   fsbGetDomainValue
+    Descripcion :   Obtiene la información de los contratistas que cumplan con
+                    los criterios
+
+    Parametros          	Descripcion
+    ============	   	   	===================
+    Entrada:
+        inuContractorId      Identificador del Contratista
+
+    Salida:
+        ocuDataCursor       CURSOR referenciado con la información del contratista
+
+    Historia de Modificaciones
+    Fecha       Autor             Modificacion
+    =========   ========= ====================
+    21-07-2015  Sagudelo.SAO298965  Creación
+    ******************************************************************/
+    FUNCTION fsbGetDomainValue
+    (
+        inuDomain           in ge_domain_values.domain_values_id%type,
+        isbValue            in ge_domain_values.value%type
+    )
+    RETURN ge_domain_values.description%type
+    IS
+        sbDescription ge_domain_values.description%type;
+        CURSOR cuCursor IS
+            SELECT  /*+
+                        index (ge_domain_values IDX_GE_DOMAIN_VALUES02)
+                    */
+                    description
+            FROM    ge_domain_values
+            WHERE   domain  = inuDomain
+            AND     value   = isbValue;
+    BEGIN
+        ut_trace.trace('Inicia GE_BCPRUDomainValues.fsbGetDomainValue', 7);
+
+        open cuCursor;
+        fetch cuCursor INTO sbDescription;
+        close cuCursor;
+
+        ut_trace.trace('Termina GE_BCPRUDomainValues.fsbGetDomainValue', 7);
+        return sbDescription;
+    EXCEPTION
+        when ex.CONTROLLED_ERROR then
+            IF cuCursor%isOpen THEN
+                close cuCursor;
+            END IF;
+            raise ex.CONTROLLED_ERROR;
+        when others then
+            IF cuCursor%isOpen THEN
+                close cuCursor;
+            END IF;
+            Errors.setError;
+            raise ex.CONTROLLED_ERROR;
+    END fsbGetDomainValue;
+END GE_BCPRUDomainValues;
+/
